@@ -279,7 +279,14 @@ typedef void (*CC_UPDATE_PARTICLE_IMP)(id, SEL, tCCParticle*, CGPoint);
 
 	// Whether or not the node will be auto-removed when there are not particles
 	BOOL	autoRemoveOnFinish_;
-
+	
+	// whether or not we reuse particles after they have extinguished
+	BOOL reuseParticles_;
+	// used to determine if there are any live particles in this system
+	BOOL hasLiveParticle_;
+	// index of the next reusable particle
+	int reusableIndex;
+	
 	//  particle idx
 	NSUInteger particleIdx;
 	
@@ -394,6 +401,8 @@ typedef void (*CC_UPDATE_PARTICLE_IMP)(id, SEL, tCCParticle*, CGPoint);
    - kCCParticleModeRadius: uses radius movement + rotation
  */
 @property (nonatomic,readwrite) NSInteger emitterMode;
+/** Sets whether this particle system will reuse its particles */
+@property (nonatomic, readwrite, assign) BOOL reuseParticles;
 
 /** creates an initializes a CCParticleSystem from a plist file.
  This plist files can be creted manually or with Particle Designer:
@@ -431,6 +440,9 @@ typedef void (*CC_UPDATE_PARTICLE_IMP)(id, SEL, tCCParticle*, CGPoint);
 -(void) updateQuadWithParticle:(tCCParticle*)particle newPosition:(CGPoint)pos;
 //! should be overriden by subclasses
 -(void) postStep;
+
+//! Creates some live particles from the system's unused particles. Can only be invoked if reusesParticles is YES
+-(void) spawnParticles:(int)p;
 
 @end
 

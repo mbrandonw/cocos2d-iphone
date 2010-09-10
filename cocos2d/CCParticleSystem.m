@@ -83,6 +83,7 @@
 @synthesize positionType = positionType_;
 @synthesize autoRemoveOnFinish = autoRemoveOnFinish_;
 @synthesize emitterMode = emitterMode_;
+@synthesize reuseParticles = reuseParticles_;
 
 
 +(id) particleWithFile:(NSString*) plistFile
@@ -150,6 +151,10 @@
 	//	colorModulate = YES;
 		
 		autoRemoveOnFinish_ = NO;
+		
+		// default, do not reuse particles (backwards compatible)
+		reuseParticles_ = NO;
+		hasLiveParticle_ = YES;
 
 		// profiling
 #if CC_ENABLE_PROFILERS
@@ -337,6 +342,9 @@
 	if( positionType_ == kCCPositionTypeFree )
 		currentPosition = [self convertToWorldSpace:CGPointZero];
 	
+	// assume there are no live particles until we find one
+	hasLiveParticle_ = NO;
+	
 	while( particleIdx < particleCount )
 	{
 		tCCParticle *p = &particles[particleIdx];
@@ -345,6 +353,9 @@
 		p->timeToLive -= dt;
 
 		if( p->timeToLive > 0 ) {
+			
+			// we do indeed have live particles
+			hasLiveParticle_ = YES;
 			
 			// Mode A: gravity, direction, tangential accel & radial accel
 			if( emitterMode_ == kCCParticleModeGravity ) {
@@ -409,6 +420,17 @@
 
 			
 			updateParticleImp(self, updateParticleSel, p, newPos);
+			
+			// update particle counter
+			particleIdx++;
+			
+		} else if (reuseParticles_ && (p->timeToLive > -2.0f * dt)) {
+			
+			// move dead particles off the screen
+			p->pos.x = -9999.0f;
+			p->pos.y = -9999.0f;
+			p->color.a = 0.0f;
+			updateParticleImp(self, updateParticleSel, p, p->pos);
 			
 			// update particle counter
 			particleIdx++;
@@ -635,6 +657,31 @@
 {
 	NSAssert( emitterMode_ == kCCParticleModeRadius, @"Particle Mode should be Radius");
 	return mode.B.rotatePerSecondVar;
+}
+
+
+#pragma mark ParticleSystem - Reusable Particles
+-(void) spawnParticles:(int)n {
+	
+	for(uint i = 0; i < n; i++)
+	{
+		// spawn a new particle
+		tCCParticle* particle = &particles[reusableIndex];
+		[self initParticle:particle];
+		
+		// next reusable particle index
+		reusableIndex = (++reusableIndex) % totalParticles;
+		
+		particleCount++;
+		if(particleCount>totalParticles) {
+			particleCount=totalParticles;
+		}
+	}
+}
+
+-(void) setReuseParticles:(BOOL)r {
+	reuseParticles_ = r;
+	self.centerOfGravity = ccp(-9999.0f,-9999.0f);
 }
 
 
