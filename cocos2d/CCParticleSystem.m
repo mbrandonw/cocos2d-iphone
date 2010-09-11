@@ -685,8 +685,15 @@
 }
 
 -(void) setReuseParticles:(BOOL)r {
+	NSAssert(autoRemoveOnFinish_ == NO, @"Particles: Cannot reuse particles and auto remove on finish at the same time");
+	
 	reuseParticles_ = r;
 	self.centerOfGravity = ccp(-9999.0f,-9999.0f);
+}
+
+-(void) setAutoRemoveOnFinish:(BOOL)b {
+	NSAssert(autoRemoveOnFinish_ == NO, @"Particles: Cannot use auto remove on finish and reusable particles at the same time");
+	autoRemoveOnFinish_ = b;
 }
 
 
