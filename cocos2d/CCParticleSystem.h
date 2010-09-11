@@ -444,5 +444,17 @@ typedef void (*CC_UPDATE_PARTICLE_IMP)(id, SEL, tCCParticle*, CGPoint);
 //! Creates some live particles from the system's unused particles. Can only be invoked if reusesParticles is YES
 -(void) spawnParticles:(int)p;
 
+/** Sets the attributes of this particle system from a plist file.
+ This plist files can be creted manually or with Particle Designer:
+ http://particledesigner.71squared.com/
+ */
+-(void) setAttributesWithFile:(NSString*)plistFile;
+
+/** Sets the attributes of this particle system from a dictionary.
+ This dictionary can be loaded from a dictionary that is created with Particle Designer:
+ http://particledesigner.71squared.com/
+ */
+-(void) setAttributesWithDictionary:(NSDictionary*)dictionary;
+
 @end
 

@@ -61,12 +61,6 @@
 #import "Support/CCFileUtils.h"
 
 
-// private
-@interface CCParticleSystem (Private)
--(void) setAttributesWithDictionary:(NSDictionary*)dictionary;
-@end
-
-
 @implementation CCParticleSystem
 @synthesize active, duration;
 @synthesize centerOfGravity, posVar;
@@ -698,8 +692,15 @@
 
 
 #pragma mark ParticleSystem - Private
+-(void) setAttributesWithFile:(NSString*)plistFile {
+	
+	NSString *path = [CCFileUtils fullPathFromRelativePath:plistFile];
+	NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:path];
+	
+	NSAssert( dict != nil, @"Particles: file not found");
+	[self setAttributesWithDictionary:dict];
+}
 
-// sets all of the attributes of the particle system from the provided dictionary
 -(void) setAttributesWithDictionary:(NSDictionary*)dictionary {
 	
 	// angle
