@@ -424,13 +424,18 @@
 			// update particle counter
 			particleIdx++;
 			
-		} else if (reuseParticles_ && (p->timeToLive > -2.0f * dt)) {
+		} else if (reuseParticles_) {
 			
-			// move dead particles off the screen
-			p->pos.x = -9999.0f;
-			p->pos.y = -9999.0f;
-			p->color.a = 0.0f;
-			updateParticleImp(self, updateParticleSel, p, p->pos);
+			// reset the particle right after it extinguishes
+			if (p->timeToLive > -2.0f * dt) {
+				
+				// move dead particles off the screen
+				p->pos.x = -9999.0f;
+				p->pos.y = -9999.0f;
+				p->color.a = 0.0f;
+				updateParticleImp(self, updateParticleSel, p, p->pos);
+				
+			}
 			
 			// update particle counter
 			particleIdx++;
