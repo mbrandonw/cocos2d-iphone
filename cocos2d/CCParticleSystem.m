@@ -692,16 +692,12 @@
 
 
 #pragma mark ParticleSystem - Private
--(void) setAttributesWithFile:(NSString*)plistFile {
-	
-	NSString *path = [CCFileUtils fullPathFromRelativePath:plistFile];
-	NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:path];
-	
-	NSAssert( dict != nil, @"Particles: file not found");
-	[self setAttributesWithDictionary:dict];
-}
 
 -(void) setAttributesWithDictionary:(NSDictionary*)dictionary {
+	[self setAttributesWithDictionary:dictionary loadTexture:YES];
+}
+
+-(void) setAttributesWithDictionary:(NSDictionary*)dictionary loadTexture:(BOOL)loadTexture {
 	
 	// angle
 	angle = [[dictionary valueForKey:@"angle"] floatValue];
@@ -809,39 +805,43 @@
 	// emission Rate
 	emissionRate = totalParticles/life;
 	
-	// texture		
-	// Try to get the texture from the cache
-	NSString *textureName = [dictionary valueForKey:@"textureFileName"];
-	
-	self.texture = [[CCTextureCache sharedTextureCache] addImage:textureName];
-	
-	NSString *textureData = [dictionary valueForKey:@"textureImageData"];
-	
-	if ( ! texture_ && textureData) {
+	// check if we should change the texture
+	if (loadTexture)
+	{
+		// texture		
+		// Try to get the texture from the cache
+		NSString *textureName = [dictionary valueForKey:@"textureFileName"];
 		
-		// if it fails, try to get it from the base64-gzipped data			
-		unsigned char *buffer = NULL;
-		NSUInteger len = base64Decode((unsigned char*)[textureData UTF8String], [textureData length], &buffer);
-		NSAssert( buffer != NULL, @"CCParticleSystem: error decoding textureImageData");
+		self.texture = [[CCTextureCache sharedTextureCache] addImage:textureName];
 		
-		unsigned char *deflated = NULL;
-		NSUInteger deflatedLen = inflateMemory(buffer, len, &deflated);
-		free( buffer );
+		NSString *textureData = [dictionary valueForKey:@"textureImageData"];
 		
-		NSAssert( deflated != NULL, @"CCParticleSystem: error ungzipping textureImageData");
-		NSData *data = [[NSData alloc] initWithBytes:deflated length:deflatedLen];
+		if ( ! texture_ && textureData) {
+			
+			// if it fails, try to get it from the base64-gzipped data			
+			unsigned char *buffer = NULL;
+			NSUInteger len = base64Decode((unsigned char*)[textureData UTF8String], [textureData length], &buffer);
+			NSAssert( buffer != NULL, @"CCParticleSystem: error decoding textureImageData");
+			
+			unsigned char *deflated = NULL;
+			NSUInteger deflatedLen = inflateMemory(buffer, len, &deflated);
+			free( buffer );
+			
+			NSAssert( deflated != NULL, @"CCParticleSystem: error ungzipping textureImageData");
+			NSData *data = [[NSData alloc] initWithBytes:deflated length:deflatedLen];
+			
+	#ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
+			UIImage *image = [[UIImage alloc] initWithData:data];
+	#elif defined(__MAC_OS_X_VERSION_MAX_ALLOWED)
+			NSBitmapImageRep *image = [[NSBitmapImageRep alloc] initWithData:data];
+	#endif
+			self.texture = [[CCTextureCache sharedTextureCache] addCGImage:[image CGImage] forKey:textureName];
+			[data release];
+			[image release];
+		}
 		
-#ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
-		UIImage *image = [[UIImage alloc] initWithData:data];
-#elif defined(__MAC_OS_X_VERSION_MAX_ALLOWED)
-		NSBitmapImageRep *image = [[NSBitmapImageRep alloc] initWithData:data];
-#endif
-		self.texture = [[CCTextureCache sharedTextureCache] addCGImage:[image CGImage] forKey:textureName];
-		[data release];
-		[image release];
+		NSAssert( [self texture] != NULL, @"CCParticleSystem: error loading the texture");
 	}
-	
-	NSAssert( [self texture] != NULL, @"CCParticleSystem: error loading the texture");
 }
 
 @end
