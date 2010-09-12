@@ -90,8 +90,8 @@
 -(void) postStep
 {
 #if CC_USES_VBO
-	// no need to buffer data if there are no live particles
-	if (hasLiveParticle_) {
+	// no need to buffer data if we are reusing particles and there are no live particles
+	if (hasLiveParticle_ || ! reuseParticles_) {
 		glBindBuffer(GL_ARRAY_BUFFER, verticesID);
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(ccPointSprite)*particleCount, vertices);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -101,8 +101,8 @@
 
 -(void) draw
 {
-	// no need to draw anything if there are no live particles
-	if (! hasLiveParticle_)
+	// no need to draw anything if we are reusing particles and there are no live particles
+	if (reuseParticles_ && ! hasLiveParticle_)
 		return ;
 	
     if (particleIdx==0)

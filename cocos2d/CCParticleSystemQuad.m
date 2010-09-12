@@ -239,8 +239,8 @@
 -(void) postStep
 {
 #if CC_USES_VBO
-	// no need to buffer data if there are no live particles
-	if (hasLiveParticle_) {
+	// no need to buffer data if we are reusing particles and there are no live particles
+	if (hasLiveParticle_ || ! reuseParticles_) {
 		glBindBuffer(GL_ARRAY_BUFFER, quadsID_);
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(quads_[0])*particleCount, quads_);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -251,8 +251,8 @@
 // overriding draw method
 -(void) draw
 {	
-	// no need to draw anything if there are no live particles
-	if (! hasLiveParticle_)
+	// no need to draw anything if we are reusing particles and there are no live particles
+	if (reuseParticles_ && ! hasLiveParticle_)
 		return ;
 	
 	// Default GL states: GL_TEXTURE_2D, GL_VERTEX_ARRAY, GL_COLOR_ARRAY, GL_TEXTURE_COORD_ARRAY
