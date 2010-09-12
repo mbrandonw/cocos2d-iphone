@@ -76,6 +76,7 @@
 @synthesize positionType = positionType_;
 @synthesize autoRemoveOnFinish = autoRemoveOnFinish_;
 @synthesize emitterMode = emitterMode_;
+@synthesize reuseParticles = reuseParticles_;
 
 
 +(id) particleWithFile:(NSString*) plistFile
@@ -103,147 +104,8 @@
 	NSUInteger maxParticles = [[dictionary valueForKey:@"maxParticles"] intValue];
 	// self, not super
 	if ((self=[self initWithTotalParticles:maxParticles] ) ) {
-		
-		// angle
-		angle = [[dictionary valueForKey:@"angle"] floatValue];
-		angleVar = [[dictionary valueForKey:@"angleVariance"] floatValue];
-		
-		// duration
-		duration = [[dictionary valueForKey:@"duration"] floatValue];
-		
-		// blend function 
-		blendFunc_.src = [[dictionary valueForKey:@"blendFuncSource"] intValue];
-		blendFunc_.dst = [[dictionary valueForKey:@"blendFuncDestination"] intValue];
-		
-		// color
-		float r,g,b,a;
-		
-		r = [[dictionary valueForKey:@"startColorRed"] floatValue];
-		g = [[dictionary valueForKey:@"startColorGreen"] floatValue];
-		b = [[dictionary valueForKey:@"startColorBlue"] floatValue];
-		a = [[dictionary valueForKey:@"startColorAlpha"] floatValue];
-		startColor = (ccColor4F) {r,g,b,a};
-		
-		r = [[dictionary valueForKey:@"startColorVarianceRed"] floatValue];
-		g = [[dictionary valueForKey:@"startColorVarianceGreen"] floatValue];
-		b = [[dictionary valueForKey:@"startColorVarianceBlue"] floatValue];
-		a = [[dictionary valueForKey:@"startColorVarianceAlpha"] floatValue];
-		startColorVar = (ccColor4F) {r,g,b,a};
-		
-		r = [[dictionary valueForKey:@"finishColorRed"] floatValue];
-		g = [[dictionary valueForKey:@"finishColorGreen"] floatValue];
-		b = [[dictionary valueForKey:@"finishColorBlue"] floatValue];
-		a = [[dictionary valueForKey:@"finishColorAlpha"] floatValue];
-		endColor = (ccColor4F) {r,g,b,a};
-		
-		r = [[dictionary valueForKey:@"finishColorVarianceRed"] floatValue];
-		g = [[dictionary valueForKey:@"finishColorVarianceGreen"] floatValue];
-		b = [[dictionary valueForKey:@"finishColorVarianceBlue"] floatValue];
-		a = [[dictionary valueForKey:@"finishColorVarianceAlpha"] floatValue];
-		endColorVar = (ccColor4F) {r,g,b,a};
-		
-		// particle size
-		startSize = [[dictionary valueForKey:@"startParticleSize"] floatValue];
-		startSizeVar = [[dictionary valueForKey:@"startParticleSizeVariance"] floatValue];
-		endSize = [[dictionary valueForKey:@"finishParticleSize"] floatValue];
-		endSizeVar = [[dictionary valueForKey:@"finishParticleSizeVariance"] floatValue];
-		
-		
-		// position
-		float x = [[dictionary valueForKey:@"sourcePositionx"] floatValue];
-		float y = [[dictionary valueForKey:@"sourcePositiony"] floatValue];
-		self.position = ccp(x,y);
-		posVar.x = [[dictionary valueForKey:@"sourcePositionVariancex"] floatValue];
-		posVar.y = [[dictionary valueForKey:@"sourcePositionVariancey"] floatValue];
-				
-		
-		emitterMode_ = [[dictionary valueForKey:@"emitterType"] intValue];
 
-		// Mode A: Gravity + tangential accel + radial accel
-		if( emitterMode_ == kCCParticleModeGravity ) {
-			// gravity
-			mode.A.gravity.x = [[dictionary valueForKey:@"gravityx"] floatValue];
-			mode.A.gravity.y = [[dictionary valueForKey:@"gravityy"] floatValue];
-			
-			//
-			// speed
-			mode.A.speed = [[dictionary valueForKey:@"speed"] floatValue];
-			mode.A.speedVar = [[dictionary valueForKey:@"speedVariance"] floatValue];
-			
-			// radial acceleration			
-			NSString *tmp = [dictionary valueForKey:@"radialAcceleration"];
-			mode.A.radialAccel = tmp ? [tmp floatValue] : 0;
-			
-			tmp = [dictionary valueForKey:@"radialAccelVariance"];
-			mode.A.radialAccelVar = tmp ? [tmp floatValue] : 0;
-						
-			// tangential acceleration
-			tmp = [dictionary valueForKey:@"tangentialAcceleration"];
-			mode.A.tangentialAccel = tmp ? [tmp floatValue] : 0;
-			
-			tmp = [dictionary valueForKey:@"tangentialAccelVariance"];
-			mode.A.tangentialAccelVar = tmp ? [tmp floatValue] : 0;
-		}
-		
-		
-		// or Mode B: radius movement
-		else if( emitterMode_ == kCCParticleModeRadius ) {
-			float maxRadius = [[dictionary valueForKey:@"maxRadius"] floatValue];
-			float maxRadiusVar = [[dictionary valueForKey:@"maxRadiusVariance"] floatValue];
-			float minRadius = [[dictionary valueForKey:@"minRadius"] floatValue];
-			
-			mode.B.startRadius = maxRadius;
-			mode.B.startRadiusVar = maxRadiusVar;
-			mode.B.endRadius = minRadius;
-			mode.B.endRadiusVar = 0;
-			mode.B.rotatePerSecond = [[dictionary valueForKey:@"rotatePerSecond"] floatValue];
-			mode.B.rotatePerSecondVar = [[dictionary valueForKey:@"rotatePerSecondVariance"] floatValue];
-
-		} else {
-			NSAssert( NO, @"Invalid emitterType in config file");
-		}
-		
-		// life span
-		life = [[dictionary valueForKey:@"particleLifespan"] floatValue];
-		lifeVar = [[dictionary valueForKey:@"particleLifespanVariance"] floatValue];				
-		
-		// emission Rate
-		emissionRate = totalParticles/life;
-
-		// texture		
-		// Try to get the texture from the cache
-		NSString *textureName = [dictionary valueForKey:@"textureFileName"];
-
-		self.texture = [[CCTextureCache sharedTextureCache] addImage:textureName];
-
-		NSString *textureData = [dictionary valueForKey:@"textureImageData"];
-
-		if ( ! texture_ && textureData) {
-			
-			// if it fails, try to get it from the base64-gzipped data			
-			unsigned char *buffer = NULL;
-			NSUInteger len = base64Decode((unsigned char*)[textureData UTF8String], [textureData length], &buffer);
-			NSAssert( buffer != NULL, @"CCParticleSystem: error decoding textureImageData");
-				
-			unsigned char *deflated = NULL;
-			NSUInteger deflatedLen = inflateMemory(buffer, len, &deflated);
-			free( buffer );
-				
-			NSAssert( deflated != NULL, @"CCParticleSystem: error ungzipping textureImageData");
-			NSData *data = [[NSData alloc] initWithBytes:deflated length:deflatedLen];
-			
-#ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
-			UIImage *image = [[UIImage alloc] initWithData:data];
-#elif defined(__MAC_OS_X_VERSION_MAX_ALLOWED)
-			NSBitmapImageRep *image = [[NSBitmapImageRep alloc] initWithData:data];
-#endif
-			self.texture = [[CCTextureCache sharedTextureCache] addCGImage:[image CGImage] forKey:textureName];
-			[data release];
-			[image release];
-		}
-		
-		NSAssert( [self texture] != NULL, @"CCParticleSystem: error loading the texture");
-		
+		[self setAttributesWithDictionary:dictionary];
 	}
 	
 	return self;
@@ -280,6 +142,10 @@
 	//	colorModulate = YES;
 		
 		autoRemoveOnFinish_ = NO;
+		
+		// default, do not reuse particles (backwards compatible)
+		reuseParticles_ = NO;
+		hasLiveParticle_ = YES;
 
 		// profiling
 #if CC_ENABLE_PROFILERS
@@ -482,6 +348,9 @@
 		currentPosition.y *= CC_CONTENT_SCALE_FACTOR();
 	}
 	
+	// assume there are no live particles until we find one
+	hasLiveParticle_ = NO;
+	
 	while( particleIdx < particleCount )
 	{
 		tCCParticle *p = &particles[particleIdx];
@@ -490,6 +359,9 @@
 		p->timeToLive -= dt;
 
 		if( p->timeToLive > 0 ) {
+			
+			// we do indeed have live particles
+			hasLiveParticle_ = YES;
 			
 			// Mode A: gravity, direction, tangential accel & radial accel
 			if( emitterMode_ == kCCParticleModeGravity ) {
@@ -554,6 +426,22 @@
 
 			
 			updateParticleImp(self, updateParticleSel, p, newPos);
+			
+			// update particle counter
+			particleIdx++;
+			
+		} else if (reuseParticles_) {
+			
+			// reset the particle right after it extinguishes
+			if (p->timeToLive > -2.0f * dt) {
+				
+				// move dead particles off the screen
+				p->pos.x = -9999.0f;
+				p->pos.y = -9999.0f;
+				p->color.a = 0.0f;
+				updateParticleImp(self, updateParticleSel, p, p->pos);
+				
+			}
 			
 			// update particle counter
 			particleIdx++;
@@ -781,6 +669,194 @@
 	NSAssert( emitterMode_ == kCCParticleModeRadius, @"Particle Mode should be Radius");
 	return mode.B.rotatePerSecondVar;
 }
+
+
+#pragma mark ParticleSystem - Reusable Particles
+
+-(void) spawnParticles:(int)n {
+	
+	for(uint i = 0; i < n; i++)
+	{
+		// spawn a new particle
+		tCCParticle* particle = &particles[reusableIndex];
+		[self initParticle:particle];
+		
+		// next reusable particle index
+		reusableIndex = (++reusableIndex) % totalParticles;
+		
+		particleCount++;
+		if(particleCount>totalParticles) {
+			particleCount=totalParticles;
+		}
+	}
+}
+
+-(void) setReuseParticles:(BOOL)r {
+	NSAssert(autoRemoveOnFinish_ == NO, @"Particles: Cannot reuse particles and auto remove on finish at the same time");
+	
+	reuseParticles_ = r;
+	self.centerOfGravity = ccp(-9999.0f,-9999.0f);
+}
+
+-(void) setAutoRemoveOnFinish:(BOOL)b {
+	NSAssert(autoRemoveOnFinish_ == NO, @"Particles: Cannot use auto remove on finish and reusable particles at the same time");
+	autoRemoveOnFinish_ = b;
+}
+
+
+#pragma mark ParticleSystem - Private
+
+-(void) setAttributesWithDictionary:(NSDictionary*)dictionary {
+	[self setAttributesWithDictionary:dictionary loadTexture:YES];
+}
+
+-(void) setAttributesWithDictionary:(NSDictionary*)dictionary loadTexture:(BOOL)loadTexture {
+	
+	// angle
+	angle = [[dictionary valueForKey:@"angle"] floatValue];
+	angleVar = [[dictionary valueForKey:@"angleVariance"] floatValue];
+	
+	// duration
+	duration = [[dictionary valueForKey:@"duration"] floatValue];
+	
+	// blend function 
+	blendFunc_.src = [[dictionary valueForKey:@"blendFuncSource"] intValue];
+	blendFunc_.dst = [[dictionary valueForKey:@"blendFuncDestination"] intValue];
+	
+	// color
+	float r,g,b,a;
+	
+	r = [[dictionary valueForKey:@"startColorRed"] floatValue];
+	g = [[dictionary valueForKey:@"startColorGreen"] floatValue];
+	b = [[dictionary valueForKey:@"startColorBlue"] floatValue];
+	a = [[dictionary valueForKey:@"startColorAlpha"] floatValue];
+	startColor = (ccColor4F) {r,g,b,a};
+	
+	r = [[dictionary valueForKey:@"startColorVarianceRed"] floatValue];
+	g = [[dictionary valueForKey:@"startColorVarianceGreen"] floatValue];
+	b = [[dictionary valueForKey:@"startColorVarianceBlue"] floatValue];
+	a = [[dictionary valueForKey:@"startColorVarianceAlpha"] floatValue];
+	startColorVar = (ccColor4F) {r,g,b,a};
+	
+	r = [[dictionary valueForKey:@"finishColorRed"] floatValue];
+	g = [[dictionary valueForKey:@"finishColorGreen"] floatValue];
+	b = [[dictionary valueForKey:@"finishColorBlue"] floatValue];
+	a = [[dictionary valueForKey:@"finishColorAlpha"] floatValue];
+	endColor = (ccColor4F) {r,g,b,a};
+	
+	r = [[dictionary valueForKey:@"finishColorVarianceRed"] floatValue];
+	g = [[dictionary valueForKey:@"finishColorVarianceGreen"] floatValue];
+	b = [[dictionary valueForKey:@"finishColorVarianceBlue"] floatValue];
+	a = [[dictionary valueForKey:@"finishColorVarianceAlpha"] floatValue];
+	endColorVar = (ccColor4F) {r,g,b,a};
+	
+	// particle size
+	startSize = [[dictionary valueForKey:@"startParticleSize"] floatValue];
+	startSizeVar = [[dictionary valueForKey:@"startParticleSizeVariance"] floatValue];
+	endSize = [[dictionary valueForKey:@"finishParticleSize"] floatValue];
+	endSizeVar = [[dictionary valueForKey:@"finishParticleSizeVariance"] floatValue];
+	
+	
+	// position
+	float x = [[dictionary valueForKey:@"sourcePositionx"] floatValue];
+	float y = [[dictionary valueForKey:@"sourcePositiony"] floatValue];
+	self.position = ccp(x,y);
+	posVar.x = [[dictionary valueForKey:@"sourcePositionVariancex"] floatValue];
+	posVar.y = [[dictionary valueForKey:@"sourcePositionVariancey"] floatValue];
+	
+	
+	emitterMode_ = [[dictionary valueForKey:@"emitterType"] intValue];
+	
+	// Mode A: Gravity + tangential accel + radial accel
+	if( emitterMode_ == kCCParticleModeGravity ) {
+		// gravity
+		mode.A.gravity.x = [[dictionary valueForKey:@"gravityx"] floatValue];
+		mode.A.gravity.y = [[dictionary valueForKey:@"gravityy"] floatValue];
+		
+		//
+		// speed
+		mode.A.speed = [[dictionary valueForKey:@"speed"] floatValue];
+		mode.A.speedVar = [[dictionary valueForKey:@"speedVariance"] floatValue];
+		
+		// radial acceleration			
+		NSString *tmp = [dictionary valueForKey:@"radialAcceleration"];
+		mode.A.radialAccel = tmp ? [tmp floatValue] : 0;
+		
+		tmp = [dictionary valueForKey:@"radialAccelVariance"];
+		mode.A.radialAccelVar = tmp ? [tmp floatValue] : 0;
+		
+		// tangential acceleration
+		tmp = [dictionary valueForKey:@"tangentialAcceleration"];
+		mode.A.tangentialAccel = tmp ? [tmp floatValue] : 0;
+		
+		tmp = [dictionary valueForKey:@"tangentialAccelVariance"];
+		mode.A.tangentialAccelVar = tmp ? [tmp floatValue] : 0;
+	}
+	
+	
+	// or Mode B: radius movement
+	else if( emitterMode_ == kCCParticleModeRadius ) {
+		float maxRadius = [[dictionary valueForKey:@"maxRadius"] floatValue];
+		float maxRadiusVar = [[dictionary valueForKey:@"maxRadiusVariance"] floatValue];
+		float minRadius = [[dictionary valueForKey:@"minRadius"] floatValue];
+		
+		mode.B.startRadius = maxRadius;
+		mode.B.startRadiusVar = maxRadiusVar;
+		mode.B.endRadius = minRadius;
+		mode.B.endRadiusVar = 0;
+		mode.B.rotatePerSecond = [[dictionary valueForKey:@"rotatePerSecond"] floatValue];
+		mode.B.rotatePerSecondVar = [[dictionary valueForKey:@"rotatePerSecondVariance"] floatValue];
+		
+	} else {
+		NSAssert( NO, @"Invalid emitterType in config file");
+	}
+	
+	// life span
+	life = [[dictionary valueForKey:@"particleLifespan"] floatValue];
+	lifeVar = [[dictionary valueForKey:@"particleLifespanVariance"] floatValue];				
+	
+	// emission Rate
+	emissionRate = totalParticles/life;
+	
+	// check if we should change the texture
+	if (loadTexture)
+	{
+		// texture		
+		// Try to get the texture from the cache
+		NSString *textureName = [dictionary valueForKey:@"textureFileName"];
+		
+		self.texture = [[CCTextureCache sharedTextureCache] addImage:textureName];
+		
+		NSString *textureData = [dictionary valueForKey:@"textureImageData"];
+		
+		if ( ! texture_ && textureData) {
+			
+			// if it fails, try to get it from the base64-gzipped data			
+			unsigned char *buffer = NULL;
+			NSUInteger len = base64Decode((unsigned char*)[textureData UTF8String], [textureData length], &buffer);
+			NSAssert( buffer != NULL, @"CCParticleSystem: error decoding textureImageData");
+			
+			unsigned char *deflated = NULL;
+			NSUInteger deflatedLen = inflateMemory(buffer, len, &deflated);
+			free( buffer );
+			
+			NSAssert( deflated != NULL, @"CCParticleSystem: error ungzipping textureImageData");
+			NSData *data = [[NSData alloc] initWithBytes:deflated length:deflatedLen];
+			
+	#ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
+			UIImage *image = [[UIImage alloc] initWithData:data];
+	#elif defined(__MAC_OS_X_VERSION_MAX_ALLOWED)
+			NSBitmapImageRep *image = [[NSBitmapImageRep alloc] initWithData:data];
+	#endif
+			self.texture = [[CCTextureCache sharedTextureCache] addCGImage:[image CGImage] forKey:textureName];
+			[data release];
+			[image release];
+		}
+		
+		NSAssert( [self texture] != NULL, @"CCParticleSystem: error loading the texture");
+	}
+}
+
 @end
 
 
