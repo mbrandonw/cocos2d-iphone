@@ -285,7 +285,7 @@ typedef void (*CC_UPDATE_PARTICLE_IMP)(id, SEL, tCCParticle*, CGPoint);
 	// used to determine if there are any live particles in this system
 	BOOL hasLiveParticle_;
 	// index of the next reusable particle
-	int reusableIndex;
+	int reusableIndex_;
 	
 	//  particle idx
 	NSUInteger particleIdx;

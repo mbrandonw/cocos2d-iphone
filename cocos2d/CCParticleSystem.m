@@ -146,6 +146,7 @@
 		// default, do not reuse particles (backwards compatible)
 		reuseParticles_ = NO;
 		hasLiveParticle_ = YES;
+		reusableIndex_ = 0;
 
 		// profiling
 #if CC_ENABLE_PROFILERS
@@ -678,11 +679,11 @@
 	for(uint i = 0; i < n; i++)
 	{
 		// spawn a new particle
-		tCCParticle* particle = &particles[reusableIndex];
+		tCCParticle* particle = &particles[reusableIndex_];
 		[self initParticle:particle];
 		
 		// next reusable particle index
-		reusableIndex = (++reusableIndex) % totalParticles;
+		reusableIndex_ = (++reusableIndex_) % totalParticles;
 		
 		particleCount++;
 		if(particleCount>totalParticles) {
