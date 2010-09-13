@@ -81,6 +81,7 @@ enum {
 typedef struct sCCParticle {
 	CGPoint		pos;
 	CGPoint		startPos;
+	CGPoint		centerOfGravity;
 
 	ccColor4F	color;
 	ccColor4F	deltaColor;

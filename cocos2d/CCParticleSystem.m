@@ -203,6 +203,8 @@
 	particle->pos.x *= CC_CONTENT_SCALE_FACTOR();
 	particle->pos.y = centerOfGravity.y + posVar.y * CCRANDOM_MINUS1_1();
 	particle->pos.y *= CC_CONTENT_SCALE_FACTOR();
+	particle->centerOfGravity.x = centerOfGravity.x * CC_CONTENT_SCALE_FACTOR();
+	particle->centerOfGravity.y = centerOfGravity.y * CC_CONTENT_SCALE_FACTOR();
 	
 	// Color
 	ccColor4F start;
@@ -321,7 +323,7 @@
 #pragma mark ParticleSystem - MainLoop
 -(void) update: (ccTime) dt
 {
-	if( active && emissionRate ) {
+	if(!reuseParticles_ && active && emissionRate ) {
 		float rate = 1.0f / emissionRate;
 		emitCounter += dt;
 		while( particleCount < totalParticles && emitCounter > rate ) {
@@ -370,8 +372,13 @@
 				
 				radial = CGPointZero;
 				// radial acceleration
-				if(p->pos.x || p->pos.y)
-					radial = ccpNormalize(p->pos);
+				if (! reuseParticles_) {
+					if (p->pos.x || p->pos.y)
+						radial = ccpNormalize(p->pos);
+				} else {
+					if((p->pos.x != p->centerOfGravity.x) || (p->pos.y != p->centerOfGravity.y))
+						radial = ccpNormalize(ccp(p->pos.x-p->centerOfGravity.x, p->pos.y-p->centerOfGravity.y));
+				}
 				tangential = radial;
 				radial = ccpMult(radial, p->mode.A.radialAccel);
 				
