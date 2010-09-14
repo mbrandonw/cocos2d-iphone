@@ -766,9 +766,11 @@
 	
 	
 	// position
-	float x = [[dictionary valueForKey:@"sourcePositionx"] floatValue];
-	float y = [[dictionary valueForKey:@"sourcePositiony"] floatValue];
-	self.position = ccp(x,y);
+	if (! reuseParticles_) {
+		float x = [[dictionary valueForKey:@"sourcePositionx"] floatValue];
+		float y = [[dictionary valueForKey:@"sourcePositiony"] floatValue];
+		self.position = ccp(x,y);
+	}
 	posVar.x = [[dictionary valueForKey:@"sourcePositionVariancex"] floatValue];
 	posVar.y = [[dictionary valueForKey:@"sourcePositionVariancey"] floatValue];
 	
