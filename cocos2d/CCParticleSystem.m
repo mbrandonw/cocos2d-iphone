@@ -441,7 +441,7 @@
 		} else if (reuseParticles_) {
 			
 			// reset the particle right after it extinguishes
-			if (p->timeToLive > -2.0f * dt) {
+			if (p->timeToLive >= life-lifeVar) {
 				
 				// move dead particles off the screen
 				p->pos.x = -9999.0f;
