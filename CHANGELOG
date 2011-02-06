@@ -1,15 +1,143 @@
-version 0.99.5-beta3 xx-Sep-2010
+version 1.0-beta - XX-XXX-2011
+. [NEW] LayerGradient: Added "compressed interpolation" (default mode) in order to display all graident's colors in any vector
+. [NEW-MAC] Added CC_DIRECTOR_INIT(). It is possible to create a Mac Window programatically
+. [NEW-MAC] EventDispatcher: Added support for touches events
+. [FIX] Layer: Deprecated. CCMultiplexLayer deprecated. New name is CCLayerMultiplex
+. [FIX] Sprite: flipx/flipy don't modify the contentSize (issue #1073)
+. [FIX] SpriteFrame: setRect sets pixels too. setRectInPixels sets points too (issue #1088)
+. [FIX] Templates: ItunesArtwork renamed to iTunesArtwork (issue #1092)
+. [FIX] TextureCache: asyncObject#dealloc uses CCLOGINFO instead of CCLOG (issue #1096)
+. [FIX] TiledMap: TMX maps work with zlib compression (Tiled v0.6)
+. [FIX-MAC] EventDispatcher: flagsChanged is triggered correctly (issue #1066)
+. [FIX-MAC] EventDispatcher: queue & dispatch events are synced (issue #1083)
+. [FIX-MAC] LabelTTF: alignment works OK (issue #1073)
+. [FIX-MAC] Menu: Menu doesn't hang up with invisible menus (issue #1070)
+. [FIX-MAC] Templates includes AudioToolbox and OpenAL frameworks
+
+version 0.99.5 - 16-Dec-2010
+. [NEW] All: small performance improvements in all the code
+. [NEW] Layer: Added gradient layer
+. [NEW] MenuItem: it also supports class methods
+. [NEW] SpriteFrameCache: added method to load a plist file with a texture file name
+. [NEW] Texture: It is possible to use a subclass like MutableTexture without modifying the code
+. [NEW-MAC] Added Mac templates
+. [NEW-MAC] Added "flagsChanged" keyboard event
+. [NEW-MAC] Added support for Fullscreen / window mode
+. [NEW-MAC] Added support for AutoScale if the window is resized / fullscreen (EXPERIMENTAL)
+. [FIX] All: Misc cleanups in the code
+. [FIX] Action: Blink restores doesn't set as invisible the frame when the action is done (issue #1061)
+. [FIX] Camera: uses points intead of pixels. Works OK in RetinaDisplay mode (issue #1023)
+. [FIX] CCArray: fixed possible crash
+. [FIX] Configuration: checks for possible glErrors. Only ask for max samples if iOS >= 4 (issue #1041)
+. [FIX] Director: Fixed possible memory leak when popping a scene.
+. [FIX] FileUtils: loads .gz / .ccz files correctly in RetinaDisplay mode (issue #1037)
+. [FIX] FileUtils: fixed big memory leaks on .ccz inflater
+. [FIX] FileUtils: removes -hd suffix if the filename already has it (issue #1040)
+. [FIX] Node: udpated doxygen strings regarding default anchorPoint (issue #1049)
+. [FIX] Sprite: updateTransform can be overriden (issue #824)
+. [FIX] Sprite: Assert if an sprite initialized with a batchnode and it is not using it (issue #1053)
+. [FIX] Sprite: correctly overrides setIsRelativeAnchorPoint (issue #1055)
+. [FIX] SpriteFrameCache: textureFileName is relative to path (issue #1044)
+. [FIX] Particles: QuadParticle uses Points (issue #1057)
+. [FIX] Templates: removeStartup compiles (issue #1059)
+. [FIX] Texture: PVR with non-square mipmaps generates a warning log in debug mode (issue #1052)
+. [FIX-MAC] Display Link thread: async images works as expected. Enabled by default.
+. [FIX-MAC] MacGLView: VSync is enabled when the view is loaded from the NIB
+. [TEST] Added Glyph Designer test case
+. [TEST] Added LayerGradient test
+. [TEST-MAC] Added cocos2d icon to Mac tests
+. [TEST-MAC] Added EventTest
+. [3RD] Chipmunk: Updated to v5.3.4
+. [3RD] libpng: don't compile pngtest.c (issue #1058)
+
+ 
+version 0.99.5-rc1 - 15-Nov-2010
+. [NEW] Director: setProjection calls "updateProjection" delegate if "custom" projection is used
+. [NEW] Label: The CCLabelProtocol implements the -(NSString*)string method.
+. [NEW] Particles: Added a new type kCCPositionTypeRelative. Useful for "trail" particles. Added Test.
+. [NEW] Textures: Added support for pvz.ccz and pvr.gz formats
+. [NEW] Textures: TextureCache has a method to test if a texture is already cached (issue #793)
+. [NEW] ZipUtils: Added generic functions to uncompress any .gz or .ccz file (issue #1016)
+. [FIX] Actions: OrbitCamera doesn't crash on Simulator
+. [FIX] CCArray: fastRemoveObjectAtIndex works as expected (issue #1024)
+. [FIX] CocosDenshion: Fixed possible loss of audio on iOS 4.2
+. [FIX] config: CC_FONT_LABEL_SUPPORT is again, enabled by default
+. [FIX] Configuration: removed main bundle from CCConfiguration (issue #839 issue #773)
+. [FIX] Director: projection is doubled in RetinaDisplay mode
+. [FIX] DrawingPrimitives: don't modify the buffer in RetinaDisplay (issue #995)
+. [FIX] EAGLView: Doesn't crash in multithread environment (re-fixed issue #350)
+. [FIX] Label: BMFontLabel simplified loading of atlas. Doesn't use CCFileUtils (issue #1031)
+. [FIX] Label: setString copies the string, and not retain it (issue #1034)
+. [FIX] Mac: Events are dispatched when CC_DIRECTOR_MAC_USE_DISPLAY_LINK_THREAD is used
+. [FIX] Menu: MenuItems can draw its children (issue #458)
+. [FIX] Menu: MenuItems positions can be controlled manually (issue #1013)
+. [FIX] Menu: Menus uses touch priority kCCMenuTouchPriority (-128) (issue #1033)
+. [FIX] Node: convertToAR method fixed (issue #1017)
+. [FIX] Node: vertexZ works OK in RetinaDisplay mode
+. [FIX] Particles: Improved doxygen documentation (issue #1026)
+. [FIX] Particles: centerOfGravity renamed to sourcePosition (issue #1026)
+. [FIX] RenderTexture: removed unneeded and dangerous assert in getUIImageAsDataFromBuffer
+. [FIX] RenderTexture: fixed important memory leak when saving images
+. [FIX] SpriteBatchNode: improved performance when drawing the batch (issue #824)
+. [FIX] SpriteBatchNode: children sprites use the visible property correctly (issue #665)
+. [FIX] TextureCache: Improved loading time of cached PVR images (issue #998)
+. [FIX] Texture2D: addPVRTCImage: -> addPVRImage: since it also loads non-compressed PVR images
+. [FIX] Texture2D: Use 32-bit textures when creating labels on ARM_NEON hardware. Performance improvement.
+		To enable it, edit ccConfig and set CC_USE_RGBA32_LABELS_ON_NEON_ARCH = 1
+. [FIX] Texture2D: Improved creation time of texts. It's not so expensive to create ZFont labels (issue #971)
+. [FIX] Tiled: images can be relative to source map (issue #787)
+. [FIX] Tiled: TMXLayer checks for correct GID (issue #742)
+
+version 0.99.5-rc0 - 25-Oct-2010
+. [NEW] AnimationCache: New class. It deprecates the CCSprite#animation methods (issue #848)
+. [NEW] Animation: simplified API. Name is no longer needed. Deprecated API that uses name.
+. [NEW] Animation: Animation has its own file: CCAnimation.m
+. [NEW] CocosDenshion: Added duration, freq and size queries for buffers
+. [NEW] Director: Added "hook" for notifications or any other kind of object like CCNotifications
+. [NEW] Director: Added "enableRetinaDisplay:(BOOL)enabled"
+. [NEW] EAGLView: Added support for multisampling
+. [NEW] EAGLView: Added support sharegroup
+. [NEW] Templates: Install HD, iPad and spotlight icons
+. [FIX] Blocks: Actions and MenuItems copy the blocks instead of retaining it (issue #1007)
+. [FIX] config: CC_FONT_LABEL_SUPPORT is disabled by default since it performs really bad on iOS >= 4.0
+. [FIX] Layer: register accelerometer onEnterTransitionDidFinsih (issue #624)
+. [FIX] Node: converToNodeSpace works on RetinaDisplay (issue #1000)
+. [FIX] Node: all transform methods uses Points instead of Pixels (issue #999)
+. [FIX] Node: onEnterTransitionDidFinsih is also called when added a node to a running node (issue #1018)
+. [FIX] Node: addChild returns void, and not self in order to simplify the API
+. [FIX] Node: Initializes parent_ to nil at init time
+. [FIX] Node: Performance improvement in insertChild (issue #909)
+. [FIX] RenderTexture: improved performance, improved logic, no more glMaskColor() bugs (issue #1012)
+. [FIX] Sprite: setPositionInPixels set to dirty when called (issue #1001)
+. [FIX] Templates: Fixed startup flicker (issue #947)
+. [FIX] Templates: Installs @2x, iPad and spotlight icons
+. [FIX] Tests: Touch Tests works on RetinaDisplay (issue #1000)
+. [FIX] Tests: box2d tests work with RetinaDisplay
+. [FIX] Transitions: PageTurnTransition re-fixed. No more artifacts. This time is for real (issue #751)
+. [3RD] Chipmunk: Using version 5.3.2
+
+version 0.99.5-beta3 23-Sep-2010
  . [NEW] RetinaDisplay supported automatically:
 	Director: winSize returns size in Points. Use winSizeInPixels for pixels
 	Node: position is in Points. Use positionInPixels for pixles
 	Node: contentSize is in Points. Use contentSizeInPixels for pixels
-	Texture2d: contentSize is deprecated. Use contentSizeInPixels
-	FileUtils: Will try to load the file with the suffix "-hd" if RetinaDisplay is enabled
+	Node: boundingBox is in Points. Use boundingBoxInPixels for pixels
+	Texture2d: contentSize is in Points. Use contentSizeInPixels for pixels
+	FileUtils: Will try to load the file with the suffix "-hd" if RetinaDisplay is enabled, unless the "-hd" suffix is already present
 	The following objects were enhanced to work with points:
-		TMXTileMap, Sprite, Node, ParticleSystem, LabelBMFont, LabelTTF, Menu, MenuItem,
-		ColorLayer, RenderTexture, MotionStreak, Transitions, Actions.
+		TMXTileMap, Sprite, SpriteFrame, Node, ParticleSystem, LabelBMFont, LabelTTF, Menu, MenuItem,
+		ColorLayer, RenderTexture, MotionStreak, Transitions, Actions, LabelAtlas, AtlasNode
+		and the drawing primitives
 	The nodes that weren't updated is because there was no need to update them.
+ . [NEW] SpriteFrameCache:	Added a way to remove from the SpriteFrameCache frames given a dictionary, file or texture (issue #953)
+ . [FIX] CCArray: improved speed in inserting and deleting elements
+ . [FIX] ParticleSystem: fixed memory leak when using ParticleDesigner (issue #986)
+ . [FIX] RenderTexture: creates a POW texture, but this doesn't mean that it should be an squared texture (issue #993)
  . [FIX] Templates: Default SDK is 4.1
+ . [FIX] Texture2d: Fixed possible crash in NPOT PVR images
+ . [FIX] Texture2d: If Text in context can't be created return nil (prevent possible crash)
+ . [FIX] Texture2d: Optimized loading time of PVR images
+ . [FIX] Transitions: PageTurn3D transition has fewer visible artifacts (issue #751)
  
 version 0.99.5-beta2 31-Ago-2010
  . [NEW] Actions: files renamed: CCXXXAction.[hm] -> CCActionXXX.[hm]

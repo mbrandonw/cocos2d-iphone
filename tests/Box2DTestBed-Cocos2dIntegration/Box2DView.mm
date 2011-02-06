@@ -47,7 +47,7 @@ enum {
 		[view setAnchorPoint:ccp(0,0)];
 		[view setPosition:ccp(s.width/2, s.height/3)];
 		
-		CCLabel* label = [CCLabelTTF labelWithString:[view title] fontName:@"Arial" fontSize:32];
+		CCLabelTTF* label = [CCLabelTTF labelWithString:[view title] fontName:@"Arial" fontSize:32];
 		[self addChild: label z:1];
 		[label setPosition: ccp(s.width/2, s.height-50)];
 		
@@ -186,7 +186,13 @@ enum {
 	glDisableClientState(GL_COLOR_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	
+	glPushMatrix();
+	float scale = CC_CONTENT_SCALE_FACTOR();
+	glScalef( scale, scale, 1 );
+	
 	test->m_world->DrawDebugData();
+	
+	glPopMatrix();
 	
 	// restore default GL states
 	glEnable(GL_TEXTURE_2D);

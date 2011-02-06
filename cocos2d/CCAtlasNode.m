@@ -44,13 +44,12 @@
 	return [[[self alloc] initWithTileFile:tile tileWidth:w tileHeight:h itemsToRender:c] autorelease];
 }
 
-
 -(id) initWithTileFile:(NSString*)tile tileWidth:(int)w tileHeight:(int)h itemsToRender: (int) c
 {
 	if( (self=[super init]) ) {
 	
-		itemWidth_ = w;
-		itemHeight_ = h;
+		itemWidth_ = w * CC_CONTENT_SCALE_FACTOR();
+		itemHeight_ = h * CC_CONTENT_SCALE_FACTOR();
 
 		opacity_ = 255;
 		color_ = colorUnmodified_ = ccWHITE;
@@ -76,7 +75,6 @@
 		[self calculateMaxItems];
 		
 	}
-	
 	return self;
 }
 
@@ -111,11 +109,9 @@
 
 	glColor4ub( color_.r, color_.g, color_.b, opacity_);
 
-	BOOL newBlend = NO;
-	if( blendFunc_.src != CC_BLEND_SRC || blendFunc_.dst != CC_BLEND_DST ) {
-		newBlend = YES;
+	BOOL newBlend = blendFunc_.src != CC_BLEND_SRC || blendFunc_.dst != CC_BLEND_DST;
+	if( newBlend )
 		glBlendFunc( blendFunc_.src, blendFunc_.dst );
-	}
 		
 	[textureAtlas_ drawQuads];
 		
@@ -136,9 +132,9 @@
 
 - (ccColor3B) color
 {
-	if(opacityModifyRGB_){
+	if(opacityModifyRGB_)
 		return colorUnmodified_;
-	}
+	
 	return color_;
 }
 
@@ -164,7 +160,7 @@
 	
 	// special opacity for premultiplied textures
 	if( opacityModifyRGB_ )
-		[self setColor: (opacityModifyRGB_ ? colorUnmodified_ : color_ )];	
+		[self setColor: colorUnmodified_];	
 }
 
 -(void) setOpacityModifyRGB:(BOOL)modify

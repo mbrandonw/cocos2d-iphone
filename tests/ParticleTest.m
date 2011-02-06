@@ -7,6 +7,11 @@
 // local import
 #import "ParticleTest.h"
 
+#ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
+#define PARTICLE_FIRE_NAME @"fire.pvr"
+#elif defined(__MAC_OS_X_VERSION_MAX_ALLOWED)
+#define PARTICLE_FIRE_NAME @"fire.png"
+#endif
 enum {
 	kTagLabelAtlas = 1,
 };
@@ -87,7 +92,12 @@ Class restartAction()
 {
 	if( (self=[super initWithColor:ccc4(127,127,127,255)] )) {
 
+#ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
 		self.isTouchEnabled = YES;
+#elif defined(__MAC_OS_X_VERSION_MAX_ALLOWED)
+		self.isMouseEnabled = YES;
+#endif
+		
 		
 		CGSize s = [[CCDirector sharedDirector] winSize];
 		CCLabelTTF *label = [CCLabelTTF labelWithString:[self title] fontName:@"Arial" fontSize:32];
@@ -106,8 +116,10 @@ Class restartAction()
 		CCMenuItemImage *item3 = [CCMenuItemImage itemFromNormalImage:@"f1.png" selectedImage:@"f2.png" target:self selector:@selector(nextCallback:)];
 		
 		CCMenuItemToggle *item4 = [CCMenuItemToggle itemWithTarget:self selector:@selector(toggleCallback:) items:
-								 [CCMenuItemFont itemFromString: @"Free Movement"],
-								 [CCMenuItemFont itemFromString: @"Grouped Movement"],
+								   [CCMenuItemFont itemFromString: @"Free Movement"],
+								   [CCMenuItemFont itemFromString: @"Relative Movement"],
+								   [CCMenuItemFont itemFromString: @"Grouped Movement"],
+
 								 nil];
 		
 		CCMenu *menu = [CCMenu menuWithItems:item1, item2, item3, item4, nil];
@@ -149,6 +161,7 @@ Class restartAction()
 }
 
 
+#ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
 -(void) registerWithTouchDispatcher
 {
 	[[CCTouchDispatcher sharedDispatcher] addTargetedDelegate:self priority:0 swallowsTouches:NO];
@@ -177,6 +190,22 @@ Class restartAction()
 		pos = [background convertToWorldSpace:CGPointZero];
 	emitter.position = ccpSub(convertedLocation, pos);	
 }
+#elif defined(__MAC_OS_X_VERSION_MAX_ALLOWED)
+
+
+-(BOOL) ccMouseDragged:(NSEvent *)event
+{
+	CGPoint convertedLocation = [[CCDirector sharedDirector] convertEventToGL:event];
+	
+	CGPoint pos = CGPointZero;
+	
+	if( background )
+		pos = [background convertToWorldSpace:CGPointZero];
+	emitter.position = ccpSub(convertedLocation, pos);	
+	// swallow the event. Don't propagate it
+	return YES;	
+}
+#endif // __MAC_OS_X_VERSION_MAX_ALLOWED
 
 -(void) update:(ccTime) dt
 {
@@ -199,7 +228,9 @@ Class restartAction()
 {
 	if( emitter.positionType == kCCPositionTypeGrouped )
 		emitter.positionType = kCCPositionTypeFree;
-	else
+	else if( emitter.positionType == kCCPositionTypeFree )
+		emitter.positionType = kCCPositionTypeRelative;
+	else if( emitter.positionType == kCCPositionTypeRelative )
 		emitter.positionType = kCCPositionTypeGrouped;
 }
 
@@ -229,7 +260,7 @@ Class restartAction()
 
 -(void) setEmitterPosition
 {
-	if( CGPointEqualToPoint( emitter.centerOfGravity, CGPointZero ) ) 
+	if( CGPointEqualToPoint( emitter.sourcePosition, CGPointZero ) ) 
 		emitter.position = ccp(200, 70);
 }
 
@@ -266,7 +297,7 @@ Class restartAction()
 	self.emitter = [CCParticleFire node];
 	[background addChild: emitter z:10];
 	
-	emitter.texture = [[CCTextureCache sharedTextureCache] addImage: @"fire.pvr"];
+	emitter.texture = [[CCTextureCache sharedTextureCache] addImage: PARTICLE_FIRE_NAME];
 	CGPoint p = emitter.position;
 	emitter.position = ccp(p.x, 100);
 	
@@ -287,7 +318,7 @@ Class restartAction()
 	self.emitter = [CCParticleSun node];
 	[background addChild: emitter z:10];
 
-	emitter.texture = [[CCTextureCache sharedTextureCache] addImage: @"fire.pvr"];
+	emitter.texture = [[CCTextureCache sharedTextureCache] addImage: PARTICLE_FIRE_NAME];
 	
 	[self setEmitterPosition];
 }
@@ -306,7 +337,7 @@ Class restartAction()
 	self.emitter = [CCParticleGalaxy node];
 	[background addChild: emitter z:10];
 	
-	emitter.texture = [[CCTextureCache sharedTextureCache] addImage: @"fire.pvr"];
+	emitter.texture = [[CCTextureCache sharedTextureCache] addImage: PARTICLE_FIRE_NAME];
 	
 	[self setEmitterPosition];
 }
@@ -507,7 +538,7 @@ Class restartAction()
 	self.emitter = [CCParticleMeteor node];
 	[background addChild: emitter z:10];
 	
-	emitter.texture = [[CCTextureCache sharedTextureCache] addImage: @"fire.pvr"];
+	emitter.texture = [[CCTextureCache sharedTextureCache] addImage: PARTICLE_FIRE_NAME];
 	
 	[self setEmitterPosition];
 }
@@ -526,7 +557,7 @@ Class restartAction()
 	self.emitter = [CCParticleSpiral node];
 	[background addChild: emitter z:10];
 	
-	emitter.texture = [[CCTextureCache sharedTextureCache] addImage: @"fire.pvr"];
+	emitter.texture = [[CCTextureCache sharedTextureCache] addImage: PARTICLE_FIRE_NAME];
 	
 	[self setEmitterPosition];
 }
@@ -635,7 +666,7 @@ Class restartAction()
 	emitter.position = ccp( p.x, p.y-100);
 	emitter.life = 4;
 	
-	emitter.texture = [[CCTextureCache sharedTextureCache] addImage: @"fire.pvr"];
+	emitter.texture = [[CCTextureCache sharedTextureCache] addImage: PARTICLE_FIRE_NAME];
 	
 	[self setEmitterPosition];
 
@@ -1388,6 +1419,7 @@ Class restartAction()
 #pragma mark App Delegate
 
 // CLASS IMPLEMENTATIONS
+#ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
 @implementation AppController
 
 - (void) applicationDidFinishLaunching:(UIApplication*)application
@@ -1413,8 +1445,9 @@ Class restartAction()
 	// Turn on display FPS
 	[director setDisplayFPS:YES];
 	
-	// Retina Display
-	[director setContentScaleFactor:2];
+	// Enables High Res mode (Retina Display) on iPhone 4 and maintains low res on all other devices
+	if( ! [director enableRetinaDisplay:YES] )
+		CCLOG(@"Retina Display Not supported");
 	
 	// Default texture format for PNG/BMP/TIFF/JPEG/GIF images
 	// It can be RGBA8888, RGBA4444, RGB5_A1, RGB565
@@ -1473,5 +1506,49 @@ Class restartAction()
 {
 	[[CCDirector sharedDirector] setNextDeltaTimeZero:YES];
 }
+@end
+
+
+#elif defined(__MAC_OS_X_VERSION_MAX_ALLOWED)
+
+@implementation cocos2dmacAppDelegate
+
+@synthesize window=window_, glView=glView_;
+
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
+{
+	CCDirectorMac *director = (CCDirectorMac*) [CCDirector sharedDirector];
+	
+	[director setDisplayFPS:YES];
+	
+	[director setOpenGLView:glView_];
+	
+	//	[director setProjection:kCCDirectorProjection2D];
+	
+	// Enable "moving" mouse event. Default no.
+	[window_ setAcceptsMouseMovedEvents:NO];
+	
+	// EXPERIMENTAL stuff.
+	// 'Effects' don't work correctly when autoscale is turned on.
+	[director setResizeMode:kCCDirectorResize_AutoScale];	
+	
+	CCScene *scene = [CCScene node];
+	[scene addChild: [nextAction() node]];
+	
+	[director runWithScene:scene];
+}
+
+- (BOOL) applicationShouldTerminateAfterLastWindowClosed: (NSApplication *) theApplication
+{
+	return YES;
+}
+
+- (IBAction)toggleFullScreen: (id)sender
+{
+	CCDirectorMac *director = (CCDirectorMac*) [CCDirector sharedDirector];
+	[director setFullScreen: ! [director isFullScreen] ];
+}
 
 @end
+#endif
+

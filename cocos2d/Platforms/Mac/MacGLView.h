@@ -30,6 +30,8 @@
 
 #import <Cocoa/Cocoa.h>
 
+#import "../../ccConfig.h"
+
 //PROTOCOLS:
 
 @protocol MacEventDelegate <NSObject>
@@ -52,12 +54,17 @@
 // Keyboard
 - (void)keyDown:(NSEvent *)theEvent;
 - (void)keyUp:(NSEvent *)theEvent;
+- (void)flagsChanged:(NSEvent *)theEvent;
 
 // Touches
 - (void)touchesBeganWithEvent:(NSEvent *)event;
 - (void)touchesMovedWithEvent:(NSEvent *)event;
 - (void)touchesEndedWithEvent:(NSEvent *)event;
 - (void)touchesCancelledWithEvent:(NSEvent *)event;
+
+#if CC_DIRECTOR_MAC_USE_DISPLAY_LINK_THREAD
+- (void)queueEvent:(NSEvent*)event selector:(SEL)selector;
+#endif
 
 @end
 
@@ -67,10 +74,12 @@
  */
 @interface MacGLView : NSOpenGLView {
 	id<MacEventDelegate> eventDelegate_;
-	
 }
 
 @property (nonatomic, readwrite, assign) id<MacEventDelegate> eventDelegate;
+
+// initializes the MacGLView with a frame rect and an OpenGL context
+- (id) initWithFrame:(NSRect)frameRect shareContext:(NSOpenGLContext*)context;
 
 // private
 +(void) load_;

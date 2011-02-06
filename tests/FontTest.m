@@ -86,9 +86,9 @@ NSString* restartAction()
     
 	
 	CCLabelTTF *top = [CCLabelTTF labelWithString:aFont fontName:aFont fontSize:24];
-	CCLabelTTF *left = [CCLabelTTF labelWithString:@"alignment left" dimensions:CGSizeMake(480,50) alignment:UITextAlignmentLeft fontName:aFont fontSize:32];
-	CCLabelTTF *center = [CCLabelTTF labelWithString:@"alignment center" dimensions:CGSizeMake(480,50) alignment:UITextAlignmentCenter fontName:aFont fontSize:32];
-	CCLabelTTF *right = [CCLabelTTF labelWithString:@"alignment right" dimensions:CGSizeMake(480,50) alignment:UITextAlignmentRight fontName:aFont fontSize:32];
+	CCLabelTTF *left = [CCLabelTTF labelWithString:@"alignment left" dimensions:CGSizeMake(480,50) alignment:CCTextAlignmentLeft fontName:aFont fontSize:32];
+	CCLabelTTF *center = [CCLabelTTF labelWithString:@"alignment center" dimensions:CGSizeMake(480,50) alignment:CCTextAlignmentCenter fontName:aFont fontSize:32];
+	CCLabelTTF *right = [CCLabelTTF labelWithString:@"alignment right" dimensions:CGSizeMake(480,50) alignment:CCTextAlignmentRight fontName:aFont fontSize:32];
 
 	CGSize s = [[CCDirector sharedDirector] winSize];
 	
@@ -156,8 +156,9 @@ NSString* restartAction()
 	// Turn on display FPS
 	[director setDisplayFPS:YES];
 	
-	// To use High-Res un comment the following line
-	[director setContentScaleFactor:2];
+	// Enables High Res mode (Retina Display) on iPhone 4 and maintains low res on all other devices
+	if( ! [director enableRetinaDisplay:YES] )
+		CCLOG(@"Retina Display Not supported");
 	
 	// Default texture format for PNG/BMP/TIFF/JPEG/GIF images
 	// It can be RGBA8888, RGBA4444, RGB5_A1, RGB565

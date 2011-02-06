@@ -39,6 +39,18 @@
 	return self;
 }
 
+-(void) onEnter
+{
+	NSLog(@"Layer1#onEnter");
+	[super onEnter];
+}
+
+-(void) onEnterTransitionDidFinish
+{
+	NSLog(@"Layer1#onEnterTransitionDidFinish");
+	[super onEnterTransitionDidFinish];
+}
+
 -(void) cleanup
 {
 	NSLog(@"Layer1#cleanup");
@@ -58,14 +70,16 @@
 
 -(void) onPushScene: (id) sender
 {
-	CCScene * scene = [[CCScene node] addChild: [Layer2 node] z:0];
+	CCScene * scene = [CCScene node];
+	[scene addChild: [Layer2 node] z:0];
 	[[CCDirector sharedDirector] pushScene: scene];
 //	[[Director sharedDirector] replaceScene:scene];
 }
 
 -(void) onPushSceneTran: (id) sender
 {
-	CCScene * scene = [[CCScene node] addChild: [Layer2 node] z:0];
+	CCScene * scene = [CCScene node];
+	[scene addChild: [Layer2 node] z:0];
 	[[CCDirector sharedDirector] pushScene: [CCTransitionSlideInT transitionWithDuration:1 scene:scene]];
 }
 
@@ -140,11 +154,14 @@
 
 -(void) onReplaceScene:(id) sender
 {
-	[[CCDirector sharedDirector] replaceScene: [ [CCScene node] addChild: [Layer3 node] z:0] ];
+	CCScene *scene = [CCScene node];
+	[scene addChild: [Layer3 node] z:0];
+	[[CCDirector sharedDirector] replaceScene: scene];
 }
 -(void) onReplaceSceneTran:(id) sender
 {
-	CCScene *s = [[CCScene node] addChild: [Layer3 node] z:0];
+	CCScene *s = [CCScene node];
+	[s addChild: [Layer3 node] z:0];
 	[[CCDirector sharedDirector] replaceScene: [CCTransitionFlipX transitionWithDuration:2 scene:s]];
 }
 @end
@@ -221,8 +238,9 @@
 	// Sets landscape mode
 	[director setDeviceOrientation:kCCDeviceOrientationLandscapeLeft];
 	
-	// Retina Display
-	[director setContentScaleFactor:2];
+	// Enables High Res mode (Retina Display) on iPhone 4 and maintains low res on all other devices
+	if( ! [director enableRetinaDisplay:YES] )
+		CCLOG(@"Retina Display Not supported");
 	
 	// Turn on display FPS
 	[director setDisplayFPS:YES];

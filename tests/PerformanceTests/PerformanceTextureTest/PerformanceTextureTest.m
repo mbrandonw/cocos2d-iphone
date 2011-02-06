@@ -68,14 +68,14 @@ float calculateDeltaTime( struct timeval *lastUpdate )
 		
 		CGSize s = [[CCDirector sharedDirector] winSize];
 		
-		CCLabel* label = [CCLabel labelWithString:[self title] fontName:@"Arial" fontSize:32];
+		CCLabelTTF* label = [CCLabelTTF labelWithString:[self title] fontName:@"Arial" fontSize:32];
 		[self addChild: label z:1];
 		[label setPosition: ccp(s.width/2, s.height-50)];
 		
 
 		NSString *subtitle = [self subtitle];
 		if( subtitle ) {
-			CCLabel* l = [CCLabel labelWithString:subtitle fontName:@"Thonburi" fontSize:16];
+			CCLabelTTF* l = [CCLabelTTF labelWithString:subtitle fontName:@"Thonburi" fontSize:16];
 			[self addChild:l z:101];
 			[l setPosition:ccp(s.width/2, s.height-80)];
 		}
@@ -250,10 +250,14 @@ float calculateDeltaTime( struct timeval *lastUpdate )
 		printf("ERROR\n");
 	[cache removeTexture:texture];
 	
+	//
+	// ---- 1024X1024
+	// RGBA4444
+	// Empty image
+	//
 
-	
-	
-	printf("\n\n--- PNG 1024x1024 ---\n");
+	printf("\n\nEMPTY IMAGE\n\n");
+	printf("--- PNG 1024x1024 ---\n");
 	[self performTestsPNG:@"texture1024x1024.png"];
 	
 	printf("--- PVR 1024x1024 ---\n");
@@ -265,6 +269,114 @@ float calculateDeltaTime( struct timeval *lastUpdate )
 	else
 		printf("ERROR\n");
 	[cache removeTexture:texture];
+
+	printf("--- PVR.GZ 1024x1024 ---\n");
+	printf("RGBA 4444");
+	gettimeofday(&now, NULL);	
+	texture = [cache addImage:@"texture1024x1024_rgba4444.pvr.gz"];
+	if( texture )
+		printf("  ms:%f\n", calculateDeltaTime(&now) );
+	else
+		printf("ERROR\n");
+	[cache removeTexture:texture];
+
+	printf("--- PVR.CCZ 1024x1024 ---\n");
+	printf("RGBA 4444");
+	gettimeofday(&now, NULL);	
+	texture = [cache addImage:@"texture1024x1024_rgba4444.pvr.ccz"];
+	if( texture )
+		printf("  ms:%f\n", calculateDeltaTime(&now) );
+	else
+		printf("ERROR\n");
+	[cache removeTexture:texture];
+
+	//
+	// ---- 1024X1024
+	// RGBA4444
+	// SpriteSheet images
+	//
+	
+	printf("\n\nSPRITESHEET IMAGE\n\n");
+	printf("--- PNG 1024x1024 ---\n");
+	[self performTestsPNG:@"PlanetCute-1024x1024.png"];
+	
+	printf("--- PVR 1024x1024 ---\n");
+	printf("RGBA 4444");
+	gettimeofday(&now, NULL);	
+	texture = [cache addImage:@"PlanetCute-1024x1024-rgba4444.pvr"];
+	if( texture )
+		printf("  ms:%f\n", calculateDeltaTime(&now) );
+	else
+		printf("ERROR\n");
+	[cache removeTexture:texture];
+	
+	printf("--- PVR.GZ 1024x1024 ---\n");
+	printf("RGBA 4444");
+	gettimeofday(&now, NULL);	
+	texture = [cache addImage:@"PlanetCute-1024x1024-rgba4444.pvr.gz"];
+	if( texture )
+		printf("  ms:%f\n", calculateDeltaTime(&now) );
+	else
+		printf("ERROR\n");
+	[cache removeTexture:texture];
+	
+	printf("--- PVR.CCZ 1024x1024 ---\n");
+	printf("RGBA 4444");
+	gettimeofday(&now, NULL);	
+	texture = [cache addImage:@"PlanetCute-1024x1024-rgba4444.pvr.ccz"];
+	if( texture )
+		printf("  ms:%f\n", calculateDeltaTime(&now) );
+	else
+		printf("ERROR\n");
+	[cache removeTexture:texture];
+	
+	
+	//
+	// ---- 1024X1024
+	// RGBA8888
+	// Landscape Image
+	//
+	
+	printf("\n\nLANDSCAPE IMAGE\n\n");
+
+	printf("--- PNG 1024x1024 ---\n");
+	[self performTestsPNG:@"landscape-1024x1024.png"];
+	
+	printf("--- PVR 1024x1024 ---\n");
+	printf("RGBA 8888");
+	gettimeofday(&now, NULL);	
+	texture = [cache addImage:@"landscape-1024x1024-rgba8888.pvr"];
+	if( texture )
+		printf("  ms:%f\n", calculateDeltaTime(&now) );
+	else
+		printf("ERROR\n");
+	[cache removeTexture:texture];
+	
+	printf("--- PVR.GZ 1024x1024 ---\n");
+	printf("RGBA 8888");
+	gettimeofday(&now, NULL);	
+	texture = [cache addImage:@"landscape-1024x1024-rgba8888.pvr.gz"];
+	if( texture )
+		printf("  ms:%f\n", calculateDeltaTime(&now) );
+	else
+		printf("ERROR\n");
+	[cache removeTexture:texture];
+	
+	printf("--- PVR.CCZ 1024x1024 ---\n");
+	printf("RGBA 8888");
+	gettimeofday(&now, NULL);	
+	texture = [cache addImage:@"landscape-1024x1024-rgba8888.pvr.ccz"];
+	if( texture )
+		printf("  ms:%f\n", calculateDeltaTime(&now) );
+	else
+		printf("ERROR\n");
+	[cache removeTexture:texture];
+
+	
+	//
+	// 2048x2048
+	// RGBA444
+	//
 	
 	
 	printf("\n\n--- PNG 2048x2048 ---\n");

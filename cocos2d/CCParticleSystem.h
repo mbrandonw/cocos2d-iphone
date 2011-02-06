@@ -63,9 +63,15 @@ enum {
  possible types of particle positions
  */
 typedef enum {
-	/** If the emitter is repositioned, the living particles won't be repositioned */
+	/** Living particles are attached to the world and are unaffected by emitter repositioning. */
 	kCCPositionTypeFree,
-	/** If the emitter is repositioned, the living particles will be repositioned too */
+
+	/** Living particles are attached to the world but will follow the emitter repositioning.
+	 Use case: Attach an emitter to an sprite, and you want that the emitter follows the sprite.
+	 */
+	kCCPositionTypeRelative,
+	
+	/** Living particles are attached to the emitter and are translated along with it. */
 	kCCPositionTypeGrouped,
 }tCCPositionType;
 
@@ -170,8 +176,7 @@ typedef void (*CC_UPDATE_PARTICLE_IMP)(id, SEL, tCCParticle*, CGPoint);
 	float elapsed;
 	
 	// position is from "superclass" CocosNode
-	// Emitter centerOfGravity position
-	CGPoint centerOfGravity;
+	CGPoint sourcePosition;
 	// Position variance
 	CGPoint posVar;
 	
@@ -307,8 +312,8 @@ typedef void (*CC_UPDATE_PARTICLE_IMP)(id, SEL, tCCParticle*, CGPoint);
 @property (nonatomic,readonly) NSUInteger	particleCount;
 /** How many seconds the emitter wil run. -1 means 'forever' */
 @property (nonatomic,readwrite,assign) float duration;
-/** centerOfGravity of the emitter */
-@property (nonatomic,readwrite,assign) CGPoint centerOfGravity;
+/** sourcePosition of the emitter */
+@property (nonatomic,readwrite,assign) CGPoint sourcePosition;
 /** Position variance of the emitter */
 @property (nonatomic,readwrite,assign) CGPoint posVar;
 /** life, and life variation of each particle */
@@ -441,6 +446,9 @@ typedef void (*CC_UPDATE_PARTICLE_IMP)(id, SEL, tCCParticle*, CGPoint);
 -(void) updateQuadWithParticle:(tCCParticle*)particle newPosition:(CGPoint)pos;
 //! should be overriden by subclasses
 -(void) postStep;
+
+//! called in every loop.
+-(void) update: (ccTime) dt;
 
 //! Creates some live particles from the system's unused particles. Can only be invoked if reusesParticles is YES
 -(void) spawnParticles:(int)p;

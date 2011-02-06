@@ -149,6 +149,9 @@ default gl blend src function. Compatible with premultiplied alpha images.
  
  @since v0.99.4
  */
+
+#ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
+
 #define CC_DIRECTOR_INIT()																		\
 do	{																							\
 	window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];					\
@@ -161,11 +164,37 @@ do	{																							\
 	EAGLView *__glView = [EAGLView viewWithFrame:[window bounds]								\
 									pixelFormat:kEAGLColorFormatRGB565							\
 									depthFormat:0 /* GL_DEPTH_COMPONENT24_OES */				\
-							 preserveBackbuffer:NO];											\
+							 preserveBackbuffer:NO												\
+									 sharegroup:nil												\
+								  multiSampling:NO												\
+								numberOfSamples:0												\
+													];											\
 	[__director setOpenGLView:__glView];														\
 	[window addSubview:__glView];																\
 	[window makeKeyAndVisible];																	\
 } while(0)
+
+
+#elif __MAC_OS_X_VERSION_MAX_ALLOWED
+
+#import "Platforms/Mac/MacWindow.h"
+
+#define CC_DIRECTOR_INIT(__WINSIZE__)															\
+do	{																							\
+	NSRect frameRect = NSMakeRect(0, 0, (__WINSIZE__).width, (__WINSIZE__).height);				\
+	self.window = [[MacWindow alloc] initWithFrame:frameRect fullscreen:NO];					\
+	self.glView = [[MacGLView alloc] initWithFrame:frameRect shareContext:nil];					\
+	[self.window setContentView:self.glView];													\
+	CCDirector *__director = [CCDirector sharedDirector];										\
+	[__director setDisplayFPS:NO];																\
+	[__director setOpenGLView:self.glView];														\
+	[(CCDirectorMac*)__director setOriginalWinSize:__WINSIZE__];								\
+	[self.window makeMainWindow];																\
+	[self.window makeKeyAndOrderFront:self];													\
+} while(0)
+
+#endif
+
  
  /** @def CC_DIRECTOR_END
   Stops and removes the director from memory.
@@ -176,19 +205,48 @@ do	{																							\
 #define CC_DIRECTOR_END()										\
 do {															\
 	CCDirector *__director = [CCDirector sharedDirector];		\
-	CC_GLVIEW *__view = [__director openGLView];					\
+	CC_GLVIEW *__view = [__director openGLView];				\
 	[__view removeFromSuperview];								\
 	[__director end];											\
 } while(0)
 
 
+#if CC_IS_RETINA_DISPLAY_SUPPORTED
+
+/****************************/
+/** RETINA DISPLAY ENABLED **/
+/****************************/
+
 /** @def CC_CONTENT_SCALE_FACTOR
-	On Mac it returns 1;
-	On iPhone it returns 2 if RetinaDisplay is On. Otherwise it returns 1
-*/
-#ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
+ On Mac it returns 1;
+ On iPhone it returns 2 if RetinaDisplay is On. Otherwise it returns 1
+ */
 #import "Platforms/iOS/CCDirectorIOS.h"
 #define CC_CONTENT_SCALE_FACTOR() __ccContentScaleFactor
-#elif __MAC_OS_X_VERSION_MAX_ALLOWED
+
+
+/** @def CC_RECT_PIXELS_TO_POINTS
+ Converts a rect in pixels to points
+ */
+#define CC_RECT_PIXELS_TO_POINTS(__pixels__)																		\
+	CGRectMake( (__pixels__).origin.x / CC_CONTENT_SCALE_FACTOR(), (__pixels__).origin.y / CC_CONTENT_SCALE_FACTOR(),	\
+			(__pixels__).size.width / CC_CONTENT_SCALE_FACTOR(), (__pixels__).size.height / CC_CONTENT_SCALE_FACTOR() )
+
+/** @def CC_RECT_POINTS_TO_PIXELS
+ Converts a rect in points to pixels
+ */
+#define CC_RECT_POINTS_TO_PIXELS(__points__)																		\
+	CGRectMake( (__points__).origin.x * CC_CONTENT_SCALE_FACTOR(), (__points__).origin.y * CC_CONTENT_SCALE_FACTOR(),	\
+			(__points__).size.width * CC_CONTENT_SCALE_FACTOR(), (__points__).size.height * CC_CONTENT_SCALE_FACTOR() )
+
+#else // retina disabled
+
+/*****************************/
+/** RETINA DISPLAY DISABLED **/
+/*****************************/
+
 #define CC_CONTENT_SCALE_FACTOR() 1
-#endif
+#define CC_RECT_PIXELS_TO_POINTS(__pixels__) __pixels__
+#define CC_RECT_POINTS_TO_PIXELS(__points__) __points__
+
+#endif // CC_IS_RETINA_DISPLAY_SUPPORTED

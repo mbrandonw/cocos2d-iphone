@@ -21,7 +21,10 @@ static NSString *transitions[] = {
 	@"AtlasFastBitmap",
 	@"BitmapFontMultiLine",
 	@"LabelsEmpty",
-	@"LabelRetinaDisplay",
+	@"LabelBMFontHD",
+	@"LabelAtlasHD",
+	@"LabelGlyphDesigner",
+	@"LabelTTFTest",
 	
 	// Not a label test. Should be moved to Atlas test
 	@"Atlas1",
@@ -349,7 +352,7 @@ Class restartAction()
 {
 	if( (self=[super init]) ) {
 		
-		CCColorLayer *col = [CCColorLayer layerWithColor:ccc4(128,128,128,255)];
+		CCLayerColor *col = [CCLayerColor layerWithColor:ccc4(128,128,128,255)];
 		[self addChild:col z:-10];
 		
 		CCLabelBMFont *label1 = [CCLabelBMFont labelWithString:@"Test" fntFile:@"bitmapFontTest2.fnt"];
@@ -807,17 +810,17 @@ Class restartAction()
 	id<CCLabelProtocol> label3 = (id<CCLabelProtocol>) [self getChildByTag:kTagBitmapAtlas3];
 	
 	if( ! setEmpty ) {
-		label1.string = @"not empty";
-		label2.string = @"not empty";
-		label3.string = @"hi";
+		[label1 setString: @"not empty"];
+		[label2 setString: @"not empty"];
+		[label3 setString: @"hi"];
 		
 		setEmpty = YES;
 
 	} else {
 		
-		label1.string = @"";
-		label2.string = @"";
-		label3.string = @"";
+		[label1 setString:@""];
+		[label2 setString:@""];
+		[label3 setString:@""];
 		
 		setEmpty = NO;
 	}
@@ -837,9 +840,9 @@ Class restartAction()
 @end
 
 #pragma mark -
-#pragma mark LabelRetinaDisplay
+#pragma mark LabelBMFontHD
 
-@implementation LabelRetinaDisplay
+@implementation LabelBMFontHD
 -(id) init
 {
 	if( (self=[super init]) ) {
@@ -864,6 +867,114 @@ Class restartAction()
 -(NSString *) subtitle
 {
 	return @"loading arista16 or arista16-hd";
+}
+
+@end
+
+#pragma mark -
+#pragma mark LabelAtlasHD
+
+@implementation LabelAtlasHD
+-(id) init
+{
+	if( (self=[super init]) ) {
+		
+		CGSize s = [[CCDirector sharedDirector] winSize];
+		
+		// CCLabelBMFont
+		CCLabelAtlas *label1 = [CCLabelAtlas labelWithString:@"TESTING RETINA DISPLAY" charMapFile:@"larabie-16.png" itemWidth:10 itemHeight:20 startCharMap:'A'];
+		label1.anchorPoint = ccp(0.5f, 0.5f);
+		
+		[self addChild:label1];
+		[label1 setPosition: ccp(s.width/2, s.height/2)];
+		
+	}
+	
+	return self;
+}
+
+-(NSString*) title
+{
+	return @"LabelAtlas with Retina Display";
+}
+
+-(NSString *) subtitle
+{
+	return @"loading larabie-16 / larabie-16-hd";
+}
+
+@end
+
+#pragma mark -
+#pragma mark LabelGlyphDesigner
+
+@implementation LabelGlyphDesigner
+-(id) init
+{
+	if( (self=[super init]) ) {
+		
+		CGSize s = [[CCDirector sharedDirector] winSize];
+		
+		CCLayerColor *layer = [CCLayerColor layerWithColor:ccc4(128,128,128,255)];
+		[self addChild:layer z:-10];
+		
+		// CCLabelBMFont
+		CCLabelBMFont *label1 = [CCLabelBMFont labelWithString:@"Testing Glyph Designer" fntFile:@"futura-48.fnt"];
+		[self addChild:label1];
+		[label1 setPosition: ccp(s.width/2, s.height/2)];
+		
+	}
+	
+	return self;
+}
+
+-(NSString*) title
+{
+	return @"Testing Glyph Designer";
+}
+
+-(NSString *) subtitle
+{
+	return @"You should see a font with shadows and outline";
+}
+
+@end
+
+#pragma mark -
+#pragma mark LabelTTFTest
+
+@implementation LabelTTFTest
+-(id) init
+{
+	if( (self=[super init]) ) {
+		
+		CGSize s = [[CCDirector sharedDirector] winSize];
+		
+		// CCLabelBMFont
+		CCLabelTTF *left = [CCLabelTTF labelWithString:@"alignment left" dimensions:CGSizeMake(s.width,50) alignment:CCTextAlignmentLeft fontName:@"Marker Felt" fontSize:32];
+		CCLabelTTF *center = [CCLabelTTF labelWithString:@"alignment center" dimensions:CGSizeMake(s.width,50) alignment:CCTextAlignmentCenter fontName:@"Marker Felt" fontSize:32];
+		CCLabelTTF *right = [CCLabelTTF labelWithString:@"alignment right" dimensions:CGSizeMake(s.width,50) alignment:CCTextAlignmentRight fontName:@"Marker Felt" fontSize:32];
+
+		left.position = ccp(s.width/2,200);
+		center.position = ccp(s.width/2,150);
+		right.position = ccp(s.width/2,100);
+		
+		[self addChild:left];
+		[self addChild:right];
+		[self addChild:center];
+	}
+	
+	return self;
+}
+
+-(NSString*) title
+{
+	return @"Testing CCLabelTTF";
+}
+
+-(NSString *) subtitle
+{
+	return @"You should see 3 labels aligned left, center and right";
 }
 
 @end
@@ -900,9 +1011,10 @@ Class restartAction()
 	// Sets landscape mode
 	[director setDeviceOrientation:kCCDeviceOrientationLandscapeLeft];
 	
-	// To use High-Res un comment the following line
-	[director setContentScaleFactor:2];
-
+	// Enables High Res mode (Retina Display) on iPhone 4 and maintains low res on all other devices
+	if( ! [director enableRetinaDisplay:YES] )
+		CCLOG(@"Retina Display Not supported");
+	
 	// Turn on display FPS
 	[director setDisplayFPS:YES];
 	
@@ -970,10 +1082,9 @@ Class restartAction()
 
 @synthesize window=window_, glView=glView_;
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-	
-	
-	CCDirector *director = [CCDirector sharedDirector];
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
+{
+	CCDirectorMac *director = (CCDirectorMac*) [CCDirector sharedDirector];
 	
 	[director setDisplayFPS:YES];
 	
@@ -984,11 +1095,25 @@ Class restartAction()
 	// Enable "moving" mouse event. Default no.
 	[window_ setAcceptsMouseMovedEvents:NO];
 	
+	// EXPERIMENTAL stuff.
+	// 'Effects' don't work correctly when autoscale is turned on.
+	[director setResizeMode:kCCDirectorResize_AutoScale];	
 	
 	CCScene *scene = [CCScene node];
 	[scene addChild: [nextAction() node]];
 	
 	[director runWithScene:scene];
+}
+
+- (BOOL) applicationShouldTerminateAfterLastWindowClosed: (NSApplication *) theApplication
+{
+	return YES;
+}
+
+- (IBAction)toggleFullScreen: (id)sender
+{
+	CCDirectorMac *director = (CCDirectorMac*) [CCDirector sharedDirector];
+	[director setFullScreen: ! [director isFullScreen] ];
 }
 
 @end

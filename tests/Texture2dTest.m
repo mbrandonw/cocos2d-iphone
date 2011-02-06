@@ -18,6 +18,7 @@ enum {
 
 static int sceneIdx=-1;
 static NSString *transitions[] = {
+	
 	@"TextureAlias",
 	@"TextureMipMap",
 	@"TexturePVRMipMap",
@@ -31,6 +32,8 @@ static NSString *transitions[] = {
 	@"TexturePVRRGBA8888",
 	@"TexturePVRBGRA8888",
 	@"TexturePVRRGBA4444",
+	@"TexturePVRRGBA4444GZ",
+	@"TexturePVRRGBA4444CCZ",
 	@"TexturePVRRGBA5551",
 	@"TexturePVRRGB565",
 	@"TexturePVRA8",
@@ -390,7 +393,7 @@ Class restartAction()
 
 -(NSString *) title
 {
-	return @"PVR MipMap Test";
+	return @"PVRTC MipMap Test";
 }
 -(NSString *) subtitle
 {
@@ -591,9 +594,12 @@ Class restartAction()
 	CGSize s = [[CCDirector sharedDirector] winSize];
 	
 	CCSprite *img = [CCSprite spriteWithFile:@"test_image_bgra8888.pvr"];
-	img.position = ccp( s.width/2.0f, s.height/2.0f);
-	[self addChild:img];
-	
+	if( img ) {
+		img.position = ccp( s.width/2.0f, s.height/2.0f);
+		[self addChild:img];
+	} else {
+		NSLog(@"BGRA8888 images are not supported");
+	}
 }
 
 -(NSString *) title
@@ -650,6 +656,66 @@ Class restartAction()
 	return @"PVR + RGBA 4444 Test";
 }
 @end
+
+#pragma mark -
+#pragma mark TexturePVR RGBA4444GZ
+
+// Image generated using PVRTexTool:
+// http://www.imgtec.com/powervr/insider/powervr-pvrtextool.asp
+
+@implementation TexturePVRRGBA4444GZ
+-(void) onEnter
+{
+	[super onEnter];
+	CGSize s = [[CCDirector sharedDirector] winSize];
+	
+	CCSprite *img = [CCSprite spriteWithFile:@"test_image_rgba4444.pvr.gz"];
+	img.position = ccp( s.width/2.0f, s.height/2.0f);
+	[self addChild:img];
+	
+}
+
+-(NSString *) title
+{
+	return @"PVR + RGBA 4444 + GZ Test";
+}
+
+-(NSString *) subtitle
+{
+	return @"This is a gzip PVR image";
+}
+
+@end
+
+#pragma mark -
+#pragma mark TexturePVR RGBA4444CCZ
+
+// Image generated using PVRTexTool:
+// http://www.imgtec.com/powervr/insider/powervr-pvrtextool.asp
+
+@implementation TexturePVRRGBA4444CCZ
+-(void) onEnter
+{
+	[super onEnter];
+	CGSize s = [[CCDirector sharedDirector] winSize];
+	
+	CCSprite *img = [CCSprite spriteWithFile:@"test_image_rgba4444.pvr.ccz"];
+	img.position = ccp( s.width/2.0f, s.height/2.0f);
+	[self addChild:img];	
+}
+
+-(NSString *) title
+{
+	return @"PVR + RGBA 4444 + CCZ Test";
+}
+
+-(NSString *) subtitle
+{
+	return @"This is a ccz PVR image";
+}
+
+@end
+
 
 #pragma mark -
 #pragma mark TexturePVR RGB565
@@ -784,9 +850,10 @@ Class restartAction()
 	CGSize s = [[CCDirector sharedDirector] winSize];
 	
 	CCSprite *img = [CCSprite spriteWithFile:@"grossini_pvr_rgba4444.pvr"];
-	img.position = ccp( s.width/2.0f, s.height/2.0f);
-	[self addChild:img];
-	
+	if( img ) {
+		img.position = ccp( s.width/2.0f, s.height/2.0f);
+		[self addChild:img];
+	}
 }
 
 -(NSString *) title
@@ -874,7 +941,7 @@ Class restartAction()
 	
 	CGSize s = [[CCDirector sharedDirector] winSize];
 		
-	CCColorLayer *background = [CCColorLayer layerWithColor:ccc4(128,128,128,255) width:s.width height:s.height];
+	CCLayerColor *background = [CCLayerColor layerWithColor:ccc4(128,128,128,255) width:s.width height:s.height];
 	[self addChild:background z:-1];
 	
 	// RGBA 8888 image (32-bit)
@@ -1287,7 +1354,7 @@ Class restartAction()
 				
 		CGSize size =[[CCDirector sharedDirector] winSize];
 	
-		CCColorLayer *background = [CCColorLayer layerWithColor:ccc4(128,128,128,255) width:size.width height:size.height];
+		CCLayerColor *background = [CCLayerColor layerWithColor:ccc4(128,128,128,255) width:size.width height:size.height];
 		[self addChild:background z:-1];
 		
 		
@@ -1563,9 +1630,10 @@ Class restartAction()
 	// Sets landscape mode
 	[director setDeviceOrientation:kCCDeviceOrientationLandscapeLeft];
 	
-	// To use High-Res un comment the following line
-	[director setContentScaleFactor:2];	
-
+	// Enables High Res mode (Retina Display) on iPhone 4 and maintains low res on all other devices
+	if( ! [director enableRetinaDisplay:YES] )
+		CCLOG(@"Retina Display Not supported");
+	
 	// Turn on display FPS
 	[director setDisplayFPS:YES];
 	
@@ -1637,25 +1705,43 @@ Class restartAction()
 
 @synthesize window=window_, glView=glView_;
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
+{
+	CGSize winSize = CGSizeMake(640,480);
 	
-	
-	CCDirector *director = [CCDirector sharedDirector];
-	
-	[director setDisplayFPS:YES];
-	
-	[director setOpenGLView:glView_];
-	
-	//	[director setProjection:kCCDirectorProjection2D];
+	//
+	// CC_DIRECTOR_INIT:
+	// 1. It will create an NSWindow with a given size
+	// 2. It will create a MacGLView and it will associate it with the NSWindow
+	// 3. It will register the MacGLView to the CCDirector
+	//
+	// If you want to create a fullscreen window, you should do it AFTER calling this macro
+	//	
+	CC_DIRECTOR_INIT(winSize);
 	
 	// Enable "moving" mouse event. Default no.
 	[window_ setAcceptsMouseMovedEvents:NO];
 	
+	// EXPERIMENTAL stuff.
+	// 'Effects' don't work correctly when autoscale is turned on.
+	CCDirectorMac *director = (CCDirectorMac*) [CCDirector sharedDirector];
+	[director setResizeMode:kCCDirectorResize_AutoScale];	
 	
 	CCScene *scene = [CCScene node];
 	[scene addChild: [nextAction() node]];
 	
 	[director runWithScene:scene];
+}
+
+- (BOOL) applicationShouldTerminateAfterLastWindowClosed: (NSApplication *) theApplication
+{
+	return YES;
+}
+
+- (IBAction)toggleFullScreen: (id)sender
+{
+	CCDirectorMac *director = (CCDirectorMac*) [CCDirector sharedDirector];
+	[director setFullScreen: ! [director isFullScreen] ];
 }
 
 @end

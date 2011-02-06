@@ -42,8 +42,8 @@
  It saves in a cache the sprite frames.
  @since v0.9
  */
-@interface CCSpriteFrameCache : NSObject {
-
+@interface CCSpriteFrameCache : NSObject
+{
 	NSMutableDictionary *spriteFrames_;
 	NSMutableDictionary *spriteFramesAliases_;
 }
@@ -70,6 +70,11 @@
  */
 -(void) addSpriteFramesWithFile:(NSString*)plist texture:(CCTexture2D*)texture;
 
+/** Adds multiple Sprite Frames from a plist file. The texture will be associated with the created sprite frames.
+ @since v0.99.5
+ */
+-(void) addSpriteFramesWithFile:(NSString*)plist textureFile:(NSString*)textureFileName;
+
 /** Adds an sprite frame with a given name.
  If the name already exists, then the contents of the old name will be replaced with the new one.
  */
@@ -93,6 +98,24 @@
 /** Deletes an sprite frame from the sprite frame cache.
  */
 -(void) removeSpriteFrameByName:(NSString*)name;
+
+/** Removes multiple Sprite Frames from a plist file.
+* Sprite Frames stored in this file will be removed.
+* It is convinient to call this method when a specific texture needs to be removed.
+* @since v0.99.5
+*/
+- (void) removeSpriteFramesFromFile:(NSString*) plist;
+
+/** Removes multiple Sprite Frames from NSDictionary.
+ * @since v0.99.5
+ */
+- (void) removeSpriteFramesFromDictionary:(NSDictionary*) dictionary;
+
+/** Removes all Sprite Frames associated with the specified textures.
+ * It is convinient to call this method when a specific texture needs to be removed.
+ * @since v0.995.
+ */
+- (void) removeSpriteFramesFromTexture:(CCTexture2D*) texture;
 
 /** Returns an Sprite Frame that was previously added.
  If the name is not found it will return nil.

@@ -14,32 +14,34 @@ enum {
 
 static int sceneIdx=-1;
 static NSString *transitions[] = {
-					@"ActionManual",
-					@"ActionMove",
-					@"ActionRotate",
-					@"ActionScale",
-					@"ActionJump",
-					@"ActionBezier",
-					@"ActionBlink",
-					@"ActionFade",
-					@"ActionTint",
-					@"ActionAnimate",
-					@"ActionSequence",
-					@"ActionSequence2",
-					@"ActionSpawn",
-					@"ActionReverse",
-					@"ActionDelayTime",
-					@"ActionRepeat",
-					@"ActionRepeatForever",
-					@"ActionRotateToRepeat",
-					@"ActionRotateJerk",
-					@"ActionCallFunc",
-					@"ActionCallFuncND",
-					@"ActionReverseSequence",
-					@"ActionReverseSequence2",
-					@"ActionOrbit",
-					@"ActionFollow",
-					@"ActionProperty",
+	
+	@"ActionManual",
+	@"ActionMove",
+	@"ActionRotate",
+	@"ActionScale",
+	@"ActionJump",
+	@"ActionBezier",
+	@"ActionBlink",
+	@"ActionFade",
+	@"ActionTint",
+	@"ActionAnimate",
+	@"ActionSequence",
+	@"ActionSequence2",
+	@"ActionSpawn",
+	@"ActionReverse",
+	@"ActionDelayTime",
+	@"ActionRepeat",
+	@"ActionRepeatForever",
+	@"ActionRotateToRepeat",
+	@"ActionRotateJerk",
+	@"ActionCallFunc",
+	@"ActionCallFuncND",
+	@"ActionCallBlock",
+	@"ActionReverseSequence",
+	@"ActionReverseSequence2",
+	@"ActionOrbit",
+	@"ActionFollow",
+	@"ActionProperty",
 };
 
 Class nextAction()
@@ -448,7 +450,7 @@ Class restartAction()
 	
 	[self centerSprites:1];
 	
-	CCAnimation* animation = [CCAnimation animationWithName:@"dance"];
+	CCAnimation* animation = [CCAnimation animation];
 	for( int i=1;i<15;i++)
 		[animation addFrameWithFilename: [NSString stringWithFormat:@"grossini_dance_%02d.png", i]];
 	
@@ -818,7 +820,7 @@ Class restartAction()
 }
 -(void) callback3:(id)sender data:(void*)data
 {
-	NSLog(@"callback 3 called from:%@ with data:%x",sender,(NSUInteger)data);
+	NSLog(@"callback 3 called from:%@ with data:%lx",sender,(NSUInteger)data);
 	CGSize s = [[CCDirector sharedDirector] winSize];
 	CCLabelTTF *label = [CCLabelTTF labelWithString:@"callback 3 called" fontName:@"Marker Felt" fontSize:16];
 	[label setPosition:ccp( s.width/4*3,s.height/2)];
@@ -856,6 +858,36 @@ Class restartAction()
 -(NSString *) subtitle
 {
 	return @"CallFuncND + removeFromParentAndCleanup. Grossini dissapears in 2s";
+}
+
+@end
+
+@implementation ActionCallBlock
+-(void) onEnter
+{
+	[super onEnter];
+	
+	[self centerSprites:1];
+	
+	id action = [CCSequence actions:
+				 [CCMoveBy actionWithDuration:2 position:ccp(200,0)],
+				 [CCCallBlockN actionWithBlock:
+				  ^(CCNode *node){
+					  CCLOG(@"block called");
+					  [node removeFromParentAndCleanup:YES];
+				  } ],
+				  nil ];
+	[grossini runAction:action];
+}
+
+-(NSString *) title
+{
+	return @"CallBlock";
+}
+
+-(NSString *) subtitle
+{
+	return @"CallBlockN test. Grossini should dissaper in 2 seconds";
 }
 
 @end
@@ -1025,8 +1057,9 @@ Class restartAction()
 	// Turn on display FPS
 	[director setDisplayFPS:YES];
 	
-	// retina diplay ON
-	[director setContentScaleFactor:2];
+	// Enables High Res mode (Retina Display) on iPhone 4 and maintains low res on all other devices
+	if( ! [director enableRetinaDisplay:YES] )
+		CCLOG(@"Retina Display Not supported");
 	
 	// Default texture format for PNG/BMP/TIFF/JPEG/GIF images
 	// It can be RGBA8888, RGBA4444, RGB5_A1, RGB565
@@ -1098,10 +1131,9 @@ Class restartAction()
 
 @synthesize window=window_, glView=glView_;
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-	
-	
-	CCDirector *director = [CCDirector sharedDirector];
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
+{
+	CCDirectorMac *director = (CCDirectorMac*) [CCDirector sharedDirector];
 	
 	[director setDisplayFPS:YES];
 	
@@ -1112,11 +1144,25 @@ Class restartAction()
 	// Enable "moving" mouse event. Default no.
 	[window_ setAcceptsMouseMovedEvents:NO];
 	
+	// EXPERIMENTAL stuff.
+	// 'Effects' don't work correctly when autoscale is turned on.
+	[director setResizeMode:kCCDirectorResize_AutoScale];	
 	
 	CCScene *scene = [CCScene node];
 	[scene addChild: [nextAction() node]];
 	
 	[director runWithScene:scene];
+}
+
+- (BOOL) applicationShouldTerminateAfterLastWindowClosed: (NSApplication *) theApplication
+{
+	return YES;
+}
+
+- (IBAction)toggleFullScreen: (id)sender
+{
+	CCDirectorMac *director = (CCDirectorMac*) [CCDirector sharedDirector];
+	[director setFullScreen: ! [director isFullScreen] ];
 }
 
 @end

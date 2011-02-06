@@ -48,30 +48,14 @@
 	EAGLView *glView = [EAGLView viewWithFrame:[window bounds]
 								   pixelFormat:kEAGLColorFormatRGB565	//kEAGLColorFormatRGBA8
 								   depthFormat:0						//GL_DEPTH_COMPONENT24_OES
-							preserveBackbuffer:NO];
+						];
 	
 	// attach the openglView to the director
 	[director setOpenGLView:glView];
 	
-	if( UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad )
-	{
-		// The device is an iPad running iPhone 3.2 or later.
-	}
-	else
-	{
-		NSArray *modes = [UIScreen mainScreen].availableModes;
-		UIScreenMode *mode = [modes objectAtIndex:0];
-		
-		if( mode.size.width == 640 )
-		{
-			// The device is an iPhone 4
-			[director setContentScaleFactor:2];
-		}
-		else
-		{
-			// The device is an old school iPhone or iPod touch.
-		}
-	}
+	// Enables High Res mode (Retina Display) on iPhone 4 and maintains low res on all other devices
+	if( ! [director enableRetinaDisplay:YES] )
+		CCLOG(@"Retina Display Not supported");
 	
 	// make the OpenGLView a child of the main window
 	[window addSubview:glView];

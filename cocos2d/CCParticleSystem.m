@@ -62,7 +62,7 @@
 
 @implementation CCParticleSystem
 @synthesize active, duration;
-@synthesize centerOfGravity, posVar;
+@synthesize sourcePosition, posVar;
 @synthesize particleCount;
 @synthesize life, lifeVar;
 @synthesize angle, angleVar;
@@ -199,12 +199,12 @@
 	particle->timeToLive = MAX(0, life + lifeVar * CCRANDOM_MINUS1_1() );
 
 	// position
-	particle->pos.x = centerOfGravity.x + posVar.x * CCRANDOM_MINUS1_1();
+	particle->pos.x = sourcePosition.x + posVar.x * CCRANDOM_MINUS1_1();
 	particle->pos.x *= CC_CONTENT_SCALE_FACTOR();
-	particle->pos.y = centerOfGravity.y + posVar.y * CCRANDOM_MINUS1_1();
+	particle->pos.y = sourcePosition.y + posVar.y * CCRANDOM_MINUS1_1();
 	particle->pos.y *= CC_CONTENT_SCALE_FACTOR();
-	particle->centerOfGravity.x = centerOfGravity.x * CC_CONTENT_SCALE_FACTOR();
-	particle->centerOfGravity.y = centerOfGravity.y * CC_CONTENT_SCALE_FACTOR();
+	particle->centerOfGravity.x = sourcePosition.x * CC_CONTENT_SCALE_FACTOR();
+	particle->centerOfGravity.y = sourcePosition.y * CC_CONTENT_SCALE_FACTOR();
 	
 	// Color
 	ccColor4F start;
@@ -248,7 +248,10 @@
 	// position
 	if( positionType_ == kCCPositionTypeFree ) {
 		CGPoint p = [self convertToWorldSpace:CGPointZero];
-		particle->startPos = ccp( p.x * CC_CONTENT_SCALE_FACTOR(), p.y * CC_CONTENT_SCALE_FACTOR() );
+		particle->startPos = ccpMult( p, CC_CONTENT_SCALE_FACTOR() );
+	}
+	else if( positionType_ == kCCPositionTypeRelative ) {
+		particle->startPos = ccpMult( position_, CC_CONTENT_SCALE_FACTOR() );
 	}
 	
 	// direction
@@ -257,10 +260,7 @@
 	// Mode Gravity: A
 	if( emitterMode_ == kCCParticleModeGravity ) {
 
-		
-		CGPoint v;
-		v.y = sinf( a );
-		v.x = cosf( a );
+		CGPoint v = {cosf( a ), sinf( a )};
 		float s = mode.A.speed + mode.A.speedVar * CCRANDOM_MINUS1_1();
 		s *= CC_CONTENT_SCALE_FACTOR();
 		
@@ -350,6 +350,11 @@
 		currentPosition.x *= CC_CONTENT_SCALE_FACTOR();
 		currentPosition.y *= CC_CONTENT_SCALE_FACTOR();
 	}
+	else if( positionType_ == kCCPositionTypeRelative ) {
+		currentPosition = position_;
+		currentPosition.x *= CC_CONTENT_SCALE_FACTOR();
+		currentPosition.y *= CC_CONTENT_SCALE_FACTOR();
+	}
 	
 	// assume there are no live particles until we find one
 	hasLiveParticle_ = NO;
@@ -425,7 +430,7 @@
 			
 			CGPoint	newPos;
 			
-			if( positionType_ == kCCPositionTypeFree ) {
+			if( positionType_ == kCCPositionTypeFree || positionType_ == kCCPositionTypeRelative ) {
 				CGPoint diff = ccpSub( currentPosition, p->startPos );
 				newPos = ccpSub(p->pos, diff);
 				
@@ -703,7 +708,7 @@
 	NSAssert(autoRemoveOnFinish_ == NO, @"Particles: Cannot reuse particles and auto remove on finish at the same time");
 	
 	reuseParticles_ = r;
-	self.centerOfGravity = ccp(-9999.0f,-9999.0f);
+	self.sourcePosition = ccp(-9999.0f,-9999.0f);
 }
 
 -(void) setAutoRemoveOnFinish:(BOOL)b {
@@ -766,11 +771,9 @@
 	
 	
 	// position
-	if (! reuseParticles_) {
-		float x = [[dictionary valueForKey:@"sourcePositionx"] floatValue];
-		float y = [[dictionary valueForKey:@"sourcePositiony"] floatValue];
-		self.position = ccp(x,y);
-	}
+	float x = [[dictionary valueForKey:@"sourcePositionx"] floatValue];
+	float y = [[dictionary valueForKey:@"sourcePositiony"] floatValue];
+	self.position = ccp(x,y);
 	posVar.x = [[dictionary valueForKey:@"sourcePositionVariancex"] floatValue];
 	posVar.y = [[dictionary valueForKey:@"sourcePositionVariancey"] floatValue];
 	
@@ -828,43 +831,42 @@
 	// emission Rate
 	emissionRate = totalParticles/life;
 	
-	// check if we should change the texture
-	if (loadTexture)
-	{
-		// texture		
-		// Try to get the texture from the cache
-		NSString *textureName = [dictionary valueForKey:@"textureFileName"];
+	// texture		
+	// Try to get the texture from the cache
+	NSString *textureName = [dictionary valueForKey:@"textureFileName"];
+	
+	self.texture = [[CCTextureCache sharedTextureCache] addImage:textureName];
+	
+	NSString *textureData = [dictionary valueForKey:@"textureImageData"];
+	
+	if ( ! texture_ && textureData) {
 		
-		self.texture = [[CCTextureCache sharedTextureCache] addImage:textureName];
+		// if it fails, try to get it from the base64-gzipped data			
+		unsigned char *buffer = NULL;
+		NSUInteger len = base64Decode((unsigned char*)[textureData UTF8String], [textureData length], &buffer);
+		NSAssert( buffer != NULL, @"CCParticleSystem: error decoding textureImageData");
 		
-		NSString *textureData = [dictionary valueForKey:@"textureImageData"];
+		unsigned char *deflated = NULL;
+		NSUInteger deflatedLen = ccInflateMemory(buffer, len, &deflated);
+		free( buffer );
 		
-		if ( ! texture_ && textureData) {
-			
-			// if it fails, try to get it from the base64-gzipped data			
-			unsigned char *buffer = NULL;
-			NSUInteger len = base64Decode((unsigned char*)[textureData UTF8String], [textureData length], &buffer);
-			NSAssert( buffer != NULL, @"CCParticleSystem: error decoding textureImageData");
-			
-			unsigned char *deflated = NULL;
-			NSUInteger deflatedLen = inflateMemory(buffer, len, &deflated);
-			free( buffer );
-			
-			NSAssert( deflated != NULL, @"CCParticleSystem: error ungzipping textureImageData");
-			NSData *data = [[NSData alloc] initWithBytes:deflated length:deflatedLen];
-			
-	#ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
-			UIImage *image = [[UIImage alloc] initWithData:data];
-	#elif defined(__MAC_OS_X_VERSION_MAX_ALLOWED)
-			NSBitmapImageRep *image = [[NSBitmapImageRep alloc] initWithData:data];
-	#endif
-			self.texture = [[CCTextureCache sharedTextureCache] addCGImage:[image CGImage] forKey:textureName];
-			[data release];
-			[image release];
-		}
+		NSAssert( deflated != NULL, @"CCParticleSystem: error ungzipping textureImageData");
+		NSData *data = [[NSData alloc] initWithBytes:deflated length:deflatedLen];
 		
-		NSAssert( [self texture] != NULL, @"CCParticleSystem: error loading the texture");
+#ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
+		UIImage *image = [[UIImage alloc] initWithData:data];
+#elif defined(__MAC_OS_X_VERSION_MAX_ALLOWED)
+		NSBitmapImageRep *image = [[NSBitmapImageRep alloc] initWithData:data];
+#endif
+		
+		free(deflated); deflated = NULL;
+		
+		self.texture = [[CCTextureCache sharedTextureCache] addCGImage:[image CGImage] forKey:textureName];
+		[data release];
+		[image release];
 	}
+	
+	NSAssert( [self texture] != NULL, @"CCParticleSystem: error loading the texture");
 }
 
 @end

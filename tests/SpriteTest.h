@@ -18,6 +18,8 @@
 @property (assign) IBOutlet NSWindow	*window;
 @property (assign) IBOutlet MacGLView	*glView;
 
+- (IBAction)toggleFullScreen:(id)sender;
+
 @end
 #endif // Mac
 
@@ -66,6 +68,15 @@
 
 @interface SpriteBatchNodeReorderIssue744 : SpriteDemo
 {}
+@end
+
+@interface SpriteBatchNodeReorderIssue766 : SpriteDemo
+{
+	CCSpriteBatchNode *batchNode;
+	CCSprite *sprite1;
+	CCSprite *sprite2;
+	CCSprite *sprite3;	
+}
 @end
 
 @interface SpriteBatchNodeReorderIssue767 : SpriteDemo
@@ -163,6 +174,15 @@
 {}
 @end
 
+@interface SpriteOffsetAnchorFlip : SpriteDemo
+{}
+@end
+
+@interface SpriteBatchNodeOffsetAnchorFlip : SpriteDemo
+{}
+@end
+
+
 @interface SpriteHybrid : SpriteDemo
 {
 	BOOL	usingSpriteBatchNode;
@@ -182,6 +202,10 @@
 @end
 
 @interface SpriteChildrenVisibility : SpriteDemo
+{}
+@end
+
+@interface SpriteChildrenVisibilityIssue665 : SpriteDemo
 {}
 @end
 
@@ -210,6 +234,10 @@
 @end
 
 @interface SpriteSubclass : SpriteDemo
+{}
+@end
+
+@interface AnimationCache : SpriteDemo
 {}
 @end
 

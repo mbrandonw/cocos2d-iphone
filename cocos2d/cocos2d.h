@@ -38,8 +38,8 @@
  */
 
 // 0x00 HI ME LO
-// 00   00 99 05
-#define COCOS2D_VERSION 0x00009905
+// 00   01 00 00
+#define COCOS2D_VERSION 0x00010000
 
 #import <Availability.h>
 
@@ -62,6 +62,8 @@
 #import "CCActionProgressTimer.h"
 #import "CCActionPageTurn3D.h"
 
+#import "CCAnimation.h"
+#import "CCAnimationCache.h"
 #import "CCSprite.h"
 #import "CCSpriteFrame.h"
 #import "CCSpriteSheet.h"
@@ -155,3 +157,9 @@
 
 // free functions
 NSString * cocos2dVersion(void);
+
+#ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
+#ifndef __IPHONE_4_0
+#error "If you are targeting iPad, you should set BASE SDK = 4.0 (or 4.1, or 4.2), and set the 'iOS deploy target' = 3.2"
+#endif
+#endif

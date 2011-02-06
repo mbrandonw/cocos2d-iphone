@@ -94,8 +94,8 @@ enum {
  Camera:
  - Each node has a camera. By default it points to the center of the CCNode.
  */ 
-@interface CCNode : NSObject {
-	
+@interface CCNode : NSObject
+{	
 	// rotation angle
 	float rotation_;	
 	
@@ -150,7 +150,7 @@ enum {
 	NSInteger tag_;
     
 	// user data field
-	void *userData;
+	void *userData_;
 
 	// Is running
 	BOOL isRunning_;
@@ -199,7 +199,7 @@ enum {
  It's like a pin in the node where it is "attached" to its parent.
  The anchorPoint is normalized, like a percentage. (0,0) means the bottom-left corner and (1,1) means the top-right corner.
  But you can use values higher than (1,1) and lower than (0,0) too.
- The default anchorPoint is (0.5,0.5), so it starts in the center of the node.
+ The default anchorPoint is (0,0). It starts in the bottom-left corner. CCSprite and other subclasses have a different default anchorPoint.
  @since v0.8
  */
 @property(nonatomic,readwrite) CGPoint anchorPoint;
@@ -267,22 +267,22 @@ enum {
 // composition: ADD
 
 /** Adds a child to the container with z-order as 0.
- It returns self, so you can chain several addChilds.
+ If the child is added to a 'running' node, then 'onEnter' and 'onEnterTransitionDidFinish' will be called immediately.
  @since v0.7.1
  */
--(id) addChild: (CCNode*)node;
+-(void) addChild: (CCNode*)node;
 
-/** Adds a child to the container with a z-order
- It returns self, so you can chain several addChilds.
+/** Adds a child to the container with a z-order.
+ If the child is added to a 'running' node, then 'onEnter' and 'onEnterTransitionDidFinish' will be called immediately.
  @since v0.7.1
  */
--(id) addChild: (CCNode*)node z:(int)z;
+-(void) addChild: (CCNode*)node z:(int)z;
 
-/** Adds a child to the container with z order and tag
- It returns self, so you can chain several addChilds.
+/** Adds a child to the container with z order and tag.
+ If the child is added to a 'running' node, then 'onEnter' and 'onEnterTransitionDidFinish' will be called immediately.
  @since v0.7.1
  */
--(id) addChild: (CCNode*)node z:(int)z tag:(int)tag;
+-(void) addChild: (CCNode*)node z:(int)z tag:(int)tag;
 
 // composition: REMOVE
 
@@ -353,13 +353,21 @@ enum {
  */
 -(void) transformAncestors;
 
-/** returns a "local" axis aligned bounding box of the node.
+/** returns a "local" axis aligned bounding box of the node in points.
  The returned box is relative only to its parent.
  The returned box is in Points.
  
  @since v0.8.2
  */
 - (CGRect) boundingBox;
+
+/** returns a "local" axis aligned bounding box of the node in pixels.
+ The returned box is relative only to its parent.
+ The returned box is in Points.
+ 
+ @since v0.99.5
+ */
+- (CGRect) boundingBoxInPixels;
 
 
 // actions
@@ -451,47 +459,50 @@ enum {
 
 // transformation methods
 
-/** Returns the local affine transform matrix
+/** Returns the matrix that transform the node's (local) space coordinates into the parent's space coordinates.
+ The matrix is in Pixels.
  @since v0.7.1
  */
 - (CGAffineTransform)nodeToParentTransform;
-/** Returns the inverse local affine transform matrix
+/** Returns the matrix that transform parent's space coordinates to the node's (local) space coordinates.
+ The matrix is in Pixels.
  @since v0.7.1
  */
 - (CGAffineTransform)parentToNodeTransform;
-/** Retrusn the world affine transform matrix
+/** Retrusn the world affine transform matrix. The matrix is in Pixels.
  @since v0.7.1
  */
 - (CGAffineTransform)nodeToWorldTransform;
-/** Returns the inverse world affine transform matrix
+/** Returns the inverse world affine transform matrix. The matrix is in Pixels.
  @since v0.7.1
  */
 - (CGAffineTransform)worldToNodeTransform;
-/** converts a world coordinate to local coordinate
+/** Converts a Point to node (local) space coordinates. The result is in Points.
  @since v0.7.1
  */
 - (CGPoint)convertToNodeSpace:(CGPoint)worldPoint;
-/** converts local coordinate to world space
+/** Converts a Point to world space coordinates. The result is in Points.
  @since v0.7.1
  */
 - (CGPoint)convertToWorldSpace:(CGPoint)nodePoint;
-/** converts a world coordinate to local coordinate
- treating the returned/received node point as anchor relative
+/** Converts a Point to node (local) space coordinates. The result is in Points.
+ treating the returned/received node point as anchor relative.
  @since v0.7.1
  */
 - (CGPoint)convertToNodeSpaceAR:(CGPoint)worldPoint;
-/** converts local coordinate to world space
- treating the returned/received node point as anchor relative
+/** Converts a local Point to world space coordinates.The result is in Points.
+ treating the returned/received node point as anchor relative.
  @since v0.7.1
  */
 - (CGPoint)convertToWorldSpaceAR:(CGPoint)nodePoint;
 
 #ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
-/** convenience methods which take a UITouch instead of CGPoint
+/** Converts a UITouch to node (local) space coordinates. The result is in Points.
  @since v0.7.1
  */
 - (CGPoint)convertTouchToNodeSpace:(UITouch *)touch;
-/** converts a UITouch (world coordinates) into a local coordiante. This method is AR (Anchor Relative).
+/** Converts a UITouch to node (local) space coordinates. The result is in Points.
+ This method is AR (Anchor Relative)..
  @since v0.7.1
  */
 - (CGPoint)convertTouchToNodeSpaceAR:(UITouch *)touch;

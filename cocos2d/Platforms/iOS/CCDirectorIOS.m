@@ -177,6 +177,10 @@ CGFloat	__ccContentScaleFactor = 1;
 	
 	/* draw the scene */
 	[runningScene_ visit];
+	
+	/* draw the notification node */
+	[notificationNode_ visit];
+
 	if( displayFPS_ )
 		[self showFPS];
 	
@@ -191,6 +195,45 @@ CGFloat	__ccContentScaleFactor = 1;
 	[openGLView_ swapBuffers];
 }
 
+-(void) setProjection:(ccDirectorProjection)projection
+{
+	CGSize size = winSizeInPixels_;
+	
+	switch (projection) {
+		case kCCDirectorProjection2D:
+			glViewport(0, 0, size.width, size.height);
+			glMatrixMode(GL_PROJECTION);
+			glLoadIdentity();
+			ccglOrtho(0, size.width, 0, size.height, -1024 * CC_CONTENT_SCALE_FACTOR(), 1024 * CC_CONTENT_SCALE_FACTOR());
+			glMatrixMode(GL_MODELVIEW);
+			glLoadIdentity();
+			break;
+			
+		case kCCDirectorProjection3D:
+			glViewport(0, 0, size.width, size.height);
+			glMatrixMode(GL_PROJECTION);
+			glLoadIdentity();
+			gluPerspective(60, (GLfloat)size.width/size.height, 0.5f, 1500.0f);
+			
+			glMatrixMode(GL_MODELVIEW);	
+			glLoadIdentity();
+			gluLookAt( size.width/2, size.height/2, [self getZEye],
+					  size.width/2, size.height/2, 0,
+					  0.0f, 1.0f, 0.0f);			
+			break;
+			
+		case kCCDirectorProjectionCustom:
+			if( projectionDelegate_ )
+				[projectionDelegate_ updateProjection];
+			break;
+			
+		default:
+			CCLOG(@"cocos2d: Director: unrecognized projecgtion");
+			break;
+	}
+	
+	projection_ = projection;
+}
 
 #pragma mark Director Scene iPhone Specific
 
@@ -292,7 +335,13 @@ CGFloat	__ccContentScaleFactor = 1;
 		}
 		
 		// alloc and init the opengl view
-		openGLView_ = [[EAGLView alloc] initWithFrame:rect pixelFormat:pFormat depthFormat:depthFormat preserveBackbuffer:NO];
+		openGLView_ = [[EAGLView alloc] initWithFrame:rect
+										  pixelFormat:pFormat
+										  depthFormat:depthFormat
+								   preserveBackbuffer:NO 
+										   sharegroup:nil
+										multiSampling:NO
+									  numberOfSamples:0];
 		
 		// check if the view was alloced and initialized
 		NSAssert( openGLView_, @"FATAL: Could not alloc and init the OpenGL view. ");
@@ -391,29 +440,36 @@ CGFloat	__ccContentScaleFactor = 1;
 	// Based on code snippet from: http://developer.apple.com/iphone/prerelease/library/snippets/sp2010/sp28.html
 	if ([openGLView_ respondsToSelector:@selector(setContentScaleFactor:)])
 	{			
-		// XXX: To avoid compile warning when using Xcode 3.2.2
-		// Version 1.0 will only support Xcode 3.2.3 or newer
-		typedef void (*CC_CONTENT_SCALE)(id, SEL, float);
-		
-		SEL selector = @selector(setContentScaleFactor:);
-		CC_CONTENT_SCALE method = (CC_CONTENT_SCALE) [openGLView_ methodForSelector:selector];
-		method(openGLView_,selector, __ccContentScaleFactor);
-		
-		//		[openGLView_ setContentScaleFactor: contentScaleFactor_];
+		[openGLView_ setContentScaleFactor: __ccContentScaleFactor];
 		
 		isContentScaleSupported_ = YES;
 	}
 	else
-	{
-		CCLOG(@"cocos2d: WARNING: calling setContentScaleFactor on iOS < 4. Using fallback mechanism");
-		/* on pre-4.0 iOS, use bounds/transform */
-		openGLView_.bounds = CGRectMake(0, 0,
-										openGLView_.bounds.size.width * __ccContentScaleFactor,
-										openGLView_.bounds.size.height * __ccContentScaleFactor);
-		openGLView_.transform = CGAffineTransformScale(openGLView_.transform, 1 / __ccContentScaleFactor, 1 / __ccContentScaleFactor); 
-		
-		isContentScaleSupported_ = NO;
-	}
+		CCLOG(@"cocos2d: 'setContentScaleFactor:' is not supported on this device");
+}
+
+-(BOOL) enableRetinaDisplay:(BOOL)enabled
+{
+	// Already enabled ?
+	if( enabled && __ccContentScaleFactor == 2 )
+		return YES;
+	
+	// Already disabled
+	if( ! enabled && __ccContentScaleFactor == 1 )
+		return YES;
+
+	// setContentScaleFactor is not supported
+	if (! [openGLView_ respondsToSelector:@selector(setContentScaleFactor:)])
+		return NO;
+
+	// SD device
+	if ([[UIScreen mainScreen] scale] == 1.0)
+		return NO;
+
+	float newScale = enabled ? 2 : 1;
+	[self setContentScaleFactor:newScale];
+	
+	return YES;
 }
 
 // overriden, don't call super

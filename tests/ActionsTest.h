@@ -20,6 +20,8 @@
 @property (assign) IBOutlet NSWindow	*window;
 @property (assign) IBOutlet MacGLView	*glView;
 
+- (IBAction)toggleFullScreen:(id)sender;
+
 @end
 #endif // Mac
 
@@ -103,6 +105,10 @@
 @end
 
 @interface ActionCallFuncND : ActionDemo
+{}
+@end
+
+@interface ActionCallBlock : ActionDemo
 {}
 @end
 

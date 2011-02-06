@@ -45,7 +45,7 @@ enum {
 
 @implementation CCMenu
 
-@synthesize opacity=opacity_, color=color_;
+@synthesize opacity = opacity_, color = color_;
 
 - (id) init
 {
@@ -107,8 +107,8 @@ enum {
 		}
 	//	[self alignItemsVertically];
 		
-		selectedItem = nil;
-		state = kCCMenuStateWaiting;
+		selectedItem_ = nil;
+		state_ = kCCMenuStateWaiting;
 	}
 	
 	return self;
@@ -122,19 +122,19 @@ enum {
 /*
  * override add:
  */
--(id) addChild:(CCMenuItem*)child z:(int)z tag:(int) aTag
+-(void) addChild:(CCMenuItem*)child z:(int)z tag:(int) aTag
 {
 	NSAssert( [child isKindOfClass:[CCMenuItem class]], @"Menu only supports MenuItem objects as children");
-	return [super addChild:child z:z tag:aTag];
+	[super addChild:child z:z tag:aTag];
 }
 
 - (void) onExit
 {
-	if(state == kCCMenuStateTrackingTouch)
+	if(state_ == kCCMenuStateTrackingTouch)
 	{
-		[selectedItem unselected];		
-		state = kCCMenuStateWaiting;
-		selectedItem = nil;
+		[selectedItem_ unselected];		
+		state_ = kCCMenuStateWaiting;
+		selectedItem_ = nil;
 	}
 	[super onExit];
 }
@@ -144,7 +144,7 @@ enum {
 #ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
 -(void) registerWithTouchDispatcher
 {
-	[[CCTouchDispatcher sharedDispatcher] addTargetedDelegate:self priority:INT_MIN+1 swallowsTouches:YES];
+	[[CCTouchDispatcher sharedDispatcher] addTargetedDelegate:self priority:kCCMenuTouchPriority swallowsTouches:YES];
 }
 
 -(CCMenuItem *) itemForTouch: (UITouch *) touch
@@ -152,16 +152,12 @@ enum {
 	CGPoint touchLocation = [touch locationInView: [touch view]];
 	touchLocation = [[CCDirector sharedDirector] convertToGL: touchLocation];
 	
-	touchLocation.x = touchLocation.x * CC_CONTENT_SCALE_FACTOR();
-	touchLocation.y = touchLocation.y * CC_CONTENT_SCALE_FACTOR();
-	
 	CCMenuItem* item;
 	CCARRAY_FOREACH(children_, item){
 		// ignore invisible and disabled items: issue #779, #866
 		if ( [item visible] && [item isEnabled] ) {
 			
 			CGPoint local = [item convertToNodeSpace:touchLocation];
-			
 			CGRect r = [item rect];
 			r.origin = CGPointZero;
 			
@@ -174,14 +170,14 @@ enum {
 
 -(BOOL) ccTouchBegan:(UITouch *)touch withEvent:(UIEvent *)event
 {
-	if( state != kCCMenuStateWaiting || !visible_ )
+	if( state_ != kCCMenuStateWaiting || !visible_ )
 		return NO;
 	
-	selectedItem = [self itemForTouch:touch];
-	[selectedItem selected];
+	selectedItem_ = [self itemForTouch:touch];
+	[selectedItem_ selected];
 	
-	if( selectedItem ) {
-		state = kCCMenuStateTrackingTouch;
+	if( selectedItem_ ) {
+		state_ = kCCMenuStateTrackingTouch;
 		return YES;
 	}
 	return NO;
@@ -189,33 +185,33 @@ enum {
 
 -(void) ccTouchEnded:(UITouch *)touch withEvent:(UIEvent *)event
 {
-	NSAssert(state == kCCMenuStateTrackingTouch, @"[Menu ccTouchEnded] -- invalid state");
+	NSAssert(state_ == kCCMenuStateTrackingTouch, @"[Menu ccTouchEnded] -- invalid state");
 	
-	[selectedItem unselected];
-	[selectedItem activate];
+	[selectedItem_ unselected];
+	[selectedItem_ activate];
 	
-	state = kCCMenuStateWaiting;
+	state_ = kCCMenuStateWaiting;
 }
 
 -(void) ccTouchCancelled:(UITouch *)touch withEvent:(UIEvent *)event
 {
-	NSAssert(state == kCCMenuStateTrackingTouch, @"[Menu ccTouchCancelled] -- invalid state");
+	NSAssert(state_ == kCCMenuStateTrackingTouch, @"[Menu ccTouchCancelled] -- invalid state");
 	
-	[selectedItem unselected];
+	[selectedItem_ unselected];
 	
-	state = kCCMenuStateWaiting;
+	state_ = kCCMenuStateWaiting;
 }
 
 -(void) ccTouchMoved:(UITouch *)touch withEvent:(UIEvent *)event
 {
-	NSAssert(state == kCCMenuStateTrackingTouch, @"[Menu ccTouchMoved] -- invalid state");
+	NSAssert(state_ == kCCMenuStateTrackingTouch, @"[Menu ccTouchMoved] -- invalid state");
 	
 	CCMenuItem *currentItem = [self itemForTouch:touch];
 	
-	if (currentItem != selectedItem) {
-		[selectedItem unselected];
-		selectedItem = currentItem;
-		[selectedItem selected];
+	if (currentItem != selectedItem_) {
+		[selectedItem_ unselected];
+		selectedItem_ = currentItem;
+		[selectedItem_ selected];
 	}
 }
 
@@ -225,7 +221,7 @@ enum {
 
 -(NSInteger) mouseDelegatePriority
 {
-	return NSIntegerMin+1;
+	return kCCMenuMousePriority+1;
 }
 
 -(CCMenuItem *) itemForMouseEvent: (NSEvent *) event
@@ -251,11 +247,14 @@ enum {
 
 -(BOOL) ccMouseUp:(NSEvent *)event
 {	
-	if( selectedItem ) {
-		[selectedItem unselected];
-		[selectedItem activate];
+	if( ! visible_ )
+		return NO;
+	
+	if( selectedItem_ ) {
+		[selectedItem_ unselected];
+		[selectedItem_ activate];
 		
-		state = kCCMenuStateWaiting;
+		state_ = kCCMenuStateWaiting;
 
 		return YES;
 	}
@@ -268,11 +267,11 @@ enum {
 	if( ! visible_ )
 		return NO;
 	
-	selectedItem = [self itemForMouseEvent:event];
-	[selectedItem selected];
+	selectedItem_ = [self itemForMouseEvent:event];
+	[selectedItem_ selected];
 
-	if( selectedItem ) {
-		state = kCCMenuStateTrackingTouch;
+	if( selectedItem_ ) {
+		state_ = kCCMenuStateTrackingTouch;
 		return YES;
 	}
 
@@ -281,16 +280,19 @@ enum {
 
 -(BOOL) ccMouseDragged:(NSEvent *)event
 {
+	if( ! visible_ )
+		return NO;
+
 	CCMenuItem *currentItem = [self itemForMouseEvent:event];
 	
-	if (currentItem != selectedItem) {
-		[selectedItem unselected];
-		selectedItem = currentItem;
-		[selectedItem selected];
+	if (currentItem != selectedItem_) {
+		[selectedItem_ unselected];
+		selectedItem_ = currentItem;
+		[selectedItem_ selected];
 	}
 	
 	// swallows event ?
-	if( currentItem && state == kCCMenuStateTrackingTouch )
+	if( currentItem && state_ == kCCMenuStateTrackingTouch )
 		return YES;
 	return NO;
 }
@@ -503,6 +505,7 @@ enum {
 - (void) setOpacity:(GLubyte)newOpacity
 {
 	opacity_ = newOpacity;
+	
 	id<CCRGBAProtocol> item;
 	CCARRAY_FOREACH(children_, item)
 		[item setOpacity:opacity_];
@@ -511,6 +514,7 @@ enum {
 -(void) setColor:(ccColor3B)color
 {
 	color_ = color;
+	
 	id<CCRGBAProtocol> item;
 	CCARRAY_FOREACH(children_, item)
 		[item setColor:color_];

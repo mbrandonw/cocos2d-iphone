@@ -134,7 +134,7 @@ Class restartAction()
 		[[CCSpriteFrameCache sharedSpriteFrameCache] addSpriteFramesWithFile:@"zwoptex/grossini.plist"];
 		[[CCSpriteFrameCache sharedSpriteFrameCache] addSpriteFramesWithFile:@"zwoptex/grossini-generic.plist"];
 		
-		CCColorLayer *layer1 = [CCColorLayer layerWithColor:ccc4(255, 0, 0, 255) width:85 height:121];
+		CCLayerColor *layer1 = [CCLayerColor layerWithColor:ccc4(255, 0, 0, 255) width:85 height:121];
 		layer1.position = ccp(s.width/2-80 - (85.0f * 0.5f), s.height/2 - (121.0f * 0.5f));
 		[self addChild:layer1];
 		
@@ -145,7 +145,7 @@ Class restartAction()
 		sprite1.flipX = NO;
 		sprite1.flipY = NO;
 		
-		CCColorLayer *layer2 = [CCColorLayer layerWithColor:ccc4(255, 0, 0, 255) width:85 height:121];
+		CCLayerColor *layer2 = [CCLayerColor layerWithColor:ccc4(255, 0, 0, 255) width:85 height:121];
 		layer2.position = ccp(s.width/2+80 - (85.0f * 0.5f), s.height/2 - (121.0f * 0.5f));
 		[self addChild:layer2];
 		
@@ -258,8 +258,7 @@ static int spriteFrameIndex = 0;
 	// Create an EAGLView with a RGB8 color buffer, and a depth buffer of 24-bits
 	EAGLView *glView = [EAGLView viewWithFrame:[window bounds]
 								   pixelFormat:kEAGLColorFormatRGBA8
-								   depthFormat:GL_DEPTH_COMPONENT24_OES
-							preserveBackbuffer:NO];
+								   depthFormat:GL_DEPTH_COMPONENT24_OES];
 	
 	// attach the openglView to the director
 	[director setOpenGLView:glView];
@@ -267,8 +266,9 @@ static int spriteFrameIndex = 0;
 	// 2D projection
 	//	[director setProjection:kCCDirectorProjection2D];
 	
-	// To use High-Res un comment the following line
-	//	[director setContentScaleFactor:2];	
+	// Enables High Res mode (Retina Display) on iPhone 4 and maintains low res on all other devices
+	if( ! [director enableRetinaDisplay:YES] )
+		CCLOG(@"Retina Display Not supported");
 	
 	// make the OpenGLView a child of the main window
 	[window addSubview:glView];

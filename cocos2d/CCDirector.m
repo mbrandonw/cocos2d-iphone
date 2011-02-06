@@ -25,7 +25,7 @@
 
 /* Idea of decoupling Window from Director taken from OC3D project: http://code.google.com/p/oc3d/
  */
- 
+
 #import <unistd.h>
 #import <Availability.h>
 
@@ -34,6 +34,7 @@
 #import "CCScheduler.h"
 #import "CCActionManager.h"
 #import "CCTextureCache.h"
+#import "CCAnimationCache.h"
 #import "CCLabelAtlas.h"
 #import "ccMacros.h"
 #import "CCTransition.h"
@@ -58,9 +59,7 @@
 #define CC_DIRECTOR_DEFAULT CCDirectorDisplayLink
 #endif
 
-#if CC_ENABLE_PROFILERS
 #import "Support/CCProfiling.h"
-#endif
 
 #define kDefaultFPS		60.0	// 60 frames per second
 
@@ -73,22 +72,19 @@ extern NSString * cocos2dVersion(void);
 -(void) showFPS;
 // calculates delta time since last time it was called
 -(void) calculateDeltaTime;
-
-#if CC_ENABLE_PROFILERS
-- (void) showProfilers;
-#endif
-
 @end
 
 @implementation CCDirector
 
-@synthesize animationInterval=animationInterval_;
+@synthesize animationInterval = animationInterval_;
 @synthesize runningScene = runningScene_;
 @synthesize displayFPS = displayFPS_;
-@synthesize nextDeltaTimeZero=nextDeltaTimeZero_;
-@synthesize isPaused=isPaused_;
-@synthesize sendCleanupToScene=sendCleanupToScene_;
-@synthesize runningThread=runningThread_;
+@synthesize nextDeltaTimeZero = nextDeltaTimeZero_;
+@synthesize isPaused = isPaused_;
+@synthesize sendCleanupToScene = sendCleanupToScene_;
+@synthesize runningThread = runningThread_;
+@synthesize notificationNode = notificationNode_;
+@synthesize projectionDelegate = projectionDelegate_;
 //
 // singleton stuff
 //
@@ -128,12 +124,17 @@ static CCDirector *_sharedDirector = nil;
 		runningScene_ = nil;
 		nextScene_ = nil;
 		
+		notificationNode_ = nil;
+		
 		oldAnimationInterval_ = animationInterval_ = 1.0 / kDefaultFPS;
 		scenesStack_ = [[NSMutableArray alloc] initWithCapacity:10];
 		
 		// Set default projection (3D)
 		projection_ = kCCDirectorProjectionDefault;
-		
+
+		// projection delegate if "Custom" projection is used
+		projectionDelegate_ = nil;
+
 		// FPS
 		displayFPS_ = NO;
 		frames_ = 0;
@@ -158,7 +159,10 @@ static CCDirector *_sharedDirector = nil;
 	[FPSLabel_ release];
 #endif
 	[runningScene_ release];
+	[notificationNode_ release];
 	[scenesStack_ release];
+	
+	[projectionDelegate_ release];
 	
 	_sharedDirector = nil;
 	
@@ -239,40 +243,7 @@ static CCDirector *_sharedDirector = nil;
 
 -(void) setProjection:(ccDirectorProjection)projection
 {
-	CGSize size = winSizeInPixels_;
-	switch (projection) {
-		case kCCDirectorProjection2D:
-			glViewport(0, 0, size.width, size.height);
-			glMatrixMode(GL_PROJECTION);
-			glLoadIdentity();
-			ccglOrtho(0, size.width, 0, size.height, -1024, 1024);
-			glMatrixMode(GL_MODELVIEW);
-			glLoadIdentity();			
-			break;
-
-		case kCCDirectorProjection3D:
-			glViewport(0, 0, size.width, size.height);
-			glMatrixMode(GL_PROJECTION);
-			glLoadIdentity();
-			gluPerspective(60, (GLfloat)size.width/size.height, 0.5f, 1500.0f);
-			
-			glMatrixMode(GL_MODELVIEW);	
-			glLoadIdentity();
-			gluLookAt( size.width/2, size.height/2, [self getZEye],
-					  size.width/2, size.height/2, 0,
-					  0.0f, 1.0f, 0.0f);			
-			break;
-			
-		case kCCDirectorProjectionCustom:
-			// if custom, ignore it. The user is resposible for setting the correct projection
-			break;
-			
-		default:
-			CCLOG(@"cocos2d: Director: unrecognized projecgtion");
-			break;
-	}
-	
-	projection_ = projection;
+	CCLOG(@"cocos2d: override me");
 }
 
 - (void) setAlphaBlending: (BOOL) on
@@ -392,9 +363,10 @@ static CCDirector *_sharedDirector = nil;
 	[scenesStack_ removeLastObject];
 	NSUInteger c = [scenesStack_ count];
 	
-	if( c == 0 ) {
+	if( c == 0 )
 		[self end];
-	} else {
+	else {
+		sendCleanupToScene_ = YES;
 		nextScene_ = [scenesStack_ objectAtIndex:c-1];
 	}
 }
@@ -419,10 +391,14 @@ static CCDirector *_sharedDirector = nil;
 	FPSLabel_ = nil;
 #endif	
 
+	[projectionDelegate_ release];
+	projectionDelegate_ = nil;
+	
 	// Purge bitmap cache
 	[CCLabelBMFont purgeCachedData];
 
 	// Purge all managers
+	[CCAnimationCache purgeSharedAnimationCache];
 	[CCSpriteFrameCache purgeSharedSpriteFrameCache];
 	[CCScheduler purgeSharedScheduler];
 	[CCActionManager purgeSharedManager];
@@ -567,15 +543,15 @@ static CCDirector *_sharedDirector = nil;
 }
 #endif
 
-#if CC_ENABLE_PROFILERS
 - (void) showProfilers {
+#if CC_ENABLE_PROFILERS
 	accumDtForProfiler_ += dt;
 	if (accumDtForProfiler_ > 1.0f) {
 		accumDtForProfiler_ = 0;
 		[[CCProfiler sharedProfiler] displayTimers];
 	}
+#endif // CC_ENABLE_PROFILERS
 }
-#endif
 
 @end
 

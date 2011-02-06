@@ -121,8 +121,17 @@ enum {
 	glDisable(GL_TEXTURE_2D);
 	glDisableClientState(GL_COLOR_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+
+	// Draws the Box2d Data in RetinaDisplay
+	glPushMatrix();
+	
+	float scale = CC_CONTENT_SCALE_FACTOR();
+	glScalef( scale, scale, 1 );
 	
 	world->DrawDebugData();
+
+	glPopMatrix();
 	
 	// restore default GL states
 	glEnable(GL_TEXTURE_2D);
@@ -259,6 +268,10 @@ enum {
 	// Turn on multiple touches
 	EAGLView *view = [director openGLView];
 	[view setMultipleTouchEnabled:YES];
+	
+	// Enables High Res mode (Retina Display) on iPhone 4 and maintains low res on all other devices
+	if ([UIScreen instancesRespondToSelector:@selector(scale)])
+		[director setContentScaleFactor:[[UIScreen mainScreen] scale]];
 	
 	// Default texture format for PNG/BMP/TIFF/JPEG/GIF images
 	// It can be RGBA8888, RGBA4444, RGB5_A1, RGB565

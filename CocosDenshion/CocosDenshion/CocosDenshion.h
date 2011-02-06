@@ -103,6 +103,8 @@ Requirements:
 #define CD_SAMPLE_RATE_BASIC 8000
 #define CD_SAMPLE_RATE_DEFAULT 44100
 
+#define CD_MSG_BAD_AL_CONTEXT @"cdbadalcontext"
+
 enum bufferState {
 	CD_BS_EMPTY = 0,
 	CD_BS_LOADED = 1,
@@ -122,6 +124,9 @@ typedef struct _bufferInfo {
 	ALuint bufferId;
 	int bufferState;
 	void* bufferData;
+	ALenum format;
+	ALsizei sizeInBytes;
+	ALsizei frequencyInHertz;
 } bufferInfo;	
 
 typedef struct _sourceInfo {
@@ -251,6 +256,13 @@ typedef struct _sourceInfo {
 -(BOOL) unloadBuffer:(int) soundId;
 -(ALCcontext *) openALContext;
 
+/** Returns the duration of the buffer in seconds or a negative value if the buffer id is invalid */
+-(float) bufferDurationInSeconds:(int) soundId;
+/** Returns the size of the buffer in bytes or a negative value if the buffer id is invalid */
+-(ALsizei) bufferSizeInBytes:(int) soundId;
+/** Returns the sampling frequency of the buffer in hertz or a negative value if the buffer id is invalid */
+-(ALsizei) bufferFrequencyInHertz:(int) soundId;
+
 /** Used internally, never call unless you know what you are doing */
 -(void) _soundSourcePreRelease:(CDSoundSource *) soundSource;
 
@@ -281,6 +293,8 @@ typedef struct _sourceInfo {
 @property (readwrite, nonatomic) BOOL looping;
 @property (readonly)  BOOL isPlaying;
 @property (readwrite, nonatomic) int soundId;
+/** Returns the duration of the attached buffer in seconds or a negative value if the buffer is invalid */
+@property (readonly) float durationInSeconds;
 
 /** Stores the last error code that occurred. Check against AL_NO_ERROR */
 @property (readonly) ALenum lastError;

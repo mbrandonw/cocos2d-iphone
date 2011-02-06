@@ -488,15 +488,15 @@ Class restartAction()
 	// create an OpenGL view
 	EAGLView *glView = [EAGLView viewWithFrame:[window bounds]
 								   pixelFormat:kEAGLColorFormatRGBA8
-								   depthFormat:0
-							preserveBackbuffer:NO];
+								   depthFormat:0];
 	[glView setMultipleTouchEnabled:YES];
 	
 	// connect it to the director
 	[director setOpenGLView:glView];
 	
-	// retina display On
-	[director setContentScaleFactor:2];
+	// Enables High Res mode (Retina Display) on iPhone 4 and maintains low res on all other devices
+	if( ! [director enableRetinaDisplay:YES] )
+		CCLOG(@"Retina Display Not supported");
 	
 	// glview is a child of the main window
 	[window addSubview:glView];

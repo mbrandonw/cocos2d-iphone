@@ -80,7 +80,7 @@
 	float textureWide = [texture pixelsWide];
 	float textureHigh = [texture pixelsHigh];
 
-	for( int i=0; i<n; i++) {
+	for( NSUInteger i=0; i<n; i++) {
 		unsigned char a = s[i] - mapStartChar;
 		float row = (a % itemsPerRow_);
 		float col = (a / itemsPerRow_);
@@ -132,13 +132,18 @@
 		[textureAtlas_ resizeCapacity: newString.length];
 
 	[string_ release];
-	string_ = [newString retain];
+	string_ = [newString copy];
 	[self updateAtlasValues];
 
 	CGSize s;
 	s.width = [string_ length] * itemWidth_;
 	s.height = itemHeight_;
-	[self setContentSize:s];
+	[self setContentSizeInPixels:s];
+}
+
+-(NSString*) string
+{
+	return string_;
 }
 
 #pragma mark CCLabelAtlas - draw
@@ -153,11 +158,9 @@
 
 	glColor4ub( color_.r, color_.g, color_.b, opacity_);
 	
-	BOOL newBlend = NO;
-	if( blendFunc_.src != CC_BLEND_SRC || blendFunc_.dst != CC_BLEND_DST ) {
-		newBlend = YES;
+	BOOL newBlend = blendFunc_.src != CC_BLEND_SRC || blendFunc_.dst != CC_BLEND_DST;
+	if( newBlend )
 		glBlendFunc( blendFunc_.src, blendFunc_.dst );
-	}
 	
 	[textureAtlas_ drawNumberOfQuads: string_.length];
 	

@@ -1,7 +1,7 @@
 /*
  * cocos2d for iPhone: http://www.cocos2d-iphone.org
  *
- * Copyright (c) 2008-2010 Ricardo Quesada
+ * Copyright (c) 2008-2011 Ricardo Quesada
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,134 +28,37 @@
 #import "CCSpriteFrame.h"
 #import "ccMacros.h"
 
-#pragma mark -
-#pragma mark CCAnimation
-
-@implementation CCAnimation
-@synthesize name=name_, delay=delay_, frames=frames_;
-
-+(id) animationWithName:(NSString*)name
-{
-	return [[[self alloc] initWithName:name] autorelease];
-}
-
-+(id) animationWithName:(NSString*)name frames:(NSArray*)frames
-{
-	return [[[self alloc] initWithName:name frames:frames] autorelease];
-}
-
-+(id) animationWithName:(NSString*)aname delay:(float)d frames:(NSArray*)array
-{
-	return [[[self alloc] initWithName:aname delay:d frames:array] autorelease];
-}
-
-+(id) animationWithName:(NSString*)aname delay:(float)d
-{
-	return [[[self alloc] initWithName:aname delay:d] autorelease];
-}
-
--(id) initWithName:(NSString*)name
-{
-	return [self initWithName:name delay:0 frames:nil];
-}
-
--(id) initWithName:(NSString*)name frames:(NSArray*)frames
-{
-	return [self initWithName:name delay:0 frames:frames];
-}
-
--(id) initWithName:(NSString*)t delay:(float)d
-{
-	return [self initWithName:t delay:d frames:nil];
-}
-
--(id) initWithName:(NSString*)name delay:(float)delay frames:(NSArray*)array
-{
-	if( (self=[super init]) ) {
-
-		delay_ = delay;
-		self.name = name;
-		self.frames = [NSMutableArray arrayWithArray:array];
-	}
-	return self;
-}
-
-- (NSString*) description
-{
-	return [NSString stringWithFormat:@"<%@ = %08X | name=%@, frames=%d>", [self class], self,
-			name_,
-			[frames_ count] ];
-}
-
--(void) dealloc
-{
-	CCLOGINFO( @"cocos2d: deallocing %@",self);
-	[name_ release];
-	[frames_ release];
-	[super dealloc];
-}
-
--(void) addFrame:(CCSpriteFrame*)frame
-{
-	[frames_ addObject:frame];
-}
-
--(void) addFrameWithFilename:(NSString*)filename
-{
-	CCTexture2D *texture = [[CCTextureCache sharedTextureCache] addImage:filename];
-	CGRect rect = CGRectZero;
-	rect.size = texture.contentSizeInPixels;
-	CCSpriteFrame *frame = [CCSpriteFrame frameWithTexture:texture rect:rect offset:CGPointZero];
-	[frames_ addObject:frame];
-}
-
--(void) addFrameWithTexture:(CCTexture2D*)texture rect:(CGRect)rect
-{
-	CCSpriteFrame *frame = [CCSpriteFrame frameWithTexture:texture rect:rect offset:CGPointZero];
-	[frames_ addObject:frame];
-}
-
-@end
-
-#pragma mark -
-#pragma mark CCSpriteFrame
 @implementation CCSpriteFrame
-@synthesize rect = rect_, rotated = rotated_, offset = offset_, texture = texture_;
-@synthesize originalSize=originalSize_;
+@synthesize rotated = rotated_, offsetInPixels = offsetInPixels_, texture = texture_;
+@synthesize originalSizeInPixels=originalSizeInPixels_;
 
-+(id) frameWithTexture:(CCTexture2D*)texture rect:(CGRect)rect offset:(CGPoint)offset
++(id) frameWithTexture:(CCTexture2D*)texture rect:(CGRect)rect
 {
-	return [[[self alloc] initWithTexture:texture rect:rect rotated:NO offset:offset originalSize:rect.size] autorelease];
+	return [[[self alloc] initWithTexture:texture rect:rect] autorelease];
 }
 
-+(id) frameWithTexture:(CCTexture2D*)texture rect:(CGRect)rect offset:(CGPoint)offset originalSize:(CGSize)originalSize
++(id) frameWithTexture:(CCTexture2D*)texture rectInPixels:(CGRect)rect rotated:(BOOL)rotated offset:(CGPoint)offset originalSize:(CGSize)originalSize
 {
-	return [[[self alloc] initWithTexture:texture rect:rect rotated:NO offset:offset originalSize:originalSize] autorelease];
+	return [[[self alloc] initWithTexture:texture rectInPixels:rect rotated:rotated offset:offset originalSize:originalSize] autorelease];
 }
 
-+(id) frameWithTexture:(CCTexture2D*)texture rect:(CGRect)rect rotated:(BOOL)rotated offset:(CGPoint)offset originalSize:(CGSize)originalSize
+-(id) initWithTexture:(CCTexture2D*)texture rect:(CGRect)rect
 {
-	return [[[self alloc] initWithTexture:texture rect:rect rotated:rotated offset:offset originalSize:originalSize] autorelease];
+	CGRect rectInPixels = CC_RECT_POINTS_TO_PIXELS( rect );
+	return [self initWithTexture:texture rectInPixels:rectInPixels rotated:NO offset:CGPointZero originalSize:rectInPixels.size];
 }
 
--(id) initWithTexture:(CCTexture2D*)texture rect:(CGRect)rect offset:(CGPoint)offset
-{
-	return [self initWithTexture:texture rect:rect rotated:NO offset:offset originalSize:rect.size];
-}
-
--(id) initWithTexture:(CCTexture2D*)texture rect:(CGRect)rect offset:(CGPoint)offset originalSize:(CGSize)originalSize {
-	return [self initWithTexture:texture rect:rect rotated:NO offset:offset originalSize:originalSize];
-}
--(id) initWithTexture:(CCTexture2D*)texture rect:(CGRect)rect rotated:(BOOL)rotated offset:(CGPoint)offset originalSize:(CGSize)originalSize
+-(id) initWithTexture:(CCTexture2D*)texture rectInPixels:(CGRect)rect rotated:(BOOL)rotated offset:(CGPoint)offset originalSize:(CGSize)originalSize
 {
 	if( (self=[super init]) ) {
 		self.texture = texture;
-		rect_ = rect;
+		rectInPixels_ = rect;
+		rect_ = CC_RECT_PIXELS_TO_POINTS( rect );
 		rotated_ = rotated;
-		offset_ = offset;
-		originalSize_ = originalSize;
+		offsetInPixels_ = offset;
+		originalSizeInPixels_ = originalSize;
 	}
-	return self;
+	return self;	
 }
 
 - (NSString*) description
@@ -177,7 +80,29 @@
 
 -(id) copyWithZone: (NSZone*) zone
 {
-	CCSpriteFrame *copy = [[[self class] allocWithZone: zone] initWithTexture:texture_ rect:rect_ rotated:rotated_ offset:offset_ originalSize:originalSize_];
+	CCSpriteFrame *copy = [[[self class] allocWithZone: zone] initWithTexture:texture_ rectInPixels:rectInPixels_ rotated:rotated_ offset:offsetInPixels_ originalSize:originalSizeInPixels_];
 	return copy;
+}
+
+-(CGRect) rect
+{
+	return rect_;
+}
+
+-(CGRect) rectInPixels
+{
+	return rectInPixels_;
+}
+
+-(void) setRect:(CGRect)rect
+{
+	rect_ = rect;
+	rectInPixels_ = CC_RECT_POINTS_TO_PIXELS( rect_ );
+}
+
+-(void) setRectInPixels:(CGRect)rectInPixels
+{
+	rectInPixels_ = rectInPixels;
+	rect_ = CC_RECT_PIXELS_TO_POINTS(rectInPixels);
 }
 @end
